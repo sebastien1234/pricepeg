@@ -1,0 +1,19 @@
+{
+  "name": "pricepeg",
+  "version": "1.0.0",
+  "description": "Maintains SYS price peg against a variety of currencies",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://dwasyluk@github.com/syscoin/pricepeg.git"
+  },
+  "author": "Dan Wasyluk",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/syscoin/pricepeg/issues"
+  },
+  "homepage": "https://github.com/syscoin/pricepeg#readme"
+}

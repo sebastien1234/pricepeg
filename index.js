@@ -1,23 +1,19 @@
-var PricePeg = require('./lib/PricePeg').PricePeg;
 var BittrexDataSource = require('./lib/data/BittrexDataSource').BittrexDataSource;
-var BaseConversionDataSource = require('./lib/data/BaseConversionDataSource').BaseConversionDataSource;
-
+var PoloniexDataSource = require('./lib/data/PoloniexDataSource').PoloniexDataSource;
+var CryptsyDataSource = require('./lib/data/CryptsyDataSource').CryptsyDataSource;
+var CoinbaseDataSource = require('./lib/data/CoinbaseDataSource').CoinbaseDataSource;
+var PricePeg = require('./lib/PricePeg').PricePeg;
 
 console.log("runin");
-var peg1 = new PricePeg("peg1");
-var peg2 = new PricePeg("peg2");
 
-peg1.testOutput();
-peg2.testOutput();
+//testing responses
+var bittrexSYSData = new BittrexDataSource("https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS");
+var poloniexSYSData = new PoloniexDataSource("https://poloniex.com/public?command=returnTicker");
+var cryptsySYSData = new CryptsyDataSource("http://pubapi.cryptsy.com/api.php?method=singlemarketdata&marketid=278");
+var coinbaseBTCData = new CoinbaseDataSource("https://coinbase.com/api/v1/currencies/exchange_rates");
 
-peg1.pegStr = "changed";
 
-peg1.testOutput();
-
-//test inheritance assumptions
-var baseData = new BaseConversionDataSource("test base");
-var bittrexData = new BittrexDataSource("https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS");
-
-baseData.fetchCurrencyConversionData("");
-console.log("BREAK");
-bittrexData.fetchCurrencyConversionData();
+bittrexSYSData.fetchCurrencyConversionData();
+poloniexSYSData.fetchCurrencyConversionData();
+cryptsySYSData.fetchCurrencyConversionData();
+coinbaseBTCData.fetchCurrencyConversionData();

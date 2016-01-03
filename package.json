@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/syscoin/pricepeg/issues"
   },
-  "homepage": "https://github.com/syscoin/pricepeg#readme"
+  "homepage": "https://github.com/syscoin/pricepeg#readme",
+  "dependencies": {
+    "request": "^2.67.0"
+  }
 }

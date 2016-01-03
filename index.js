@@ -1,5 +1,5 @@
 var PricePeg = require('./lib/PricePeg').PricePeg;
-//var TestDataSource = require('./lib/data/TestDataSource').TestDataSource;
+var BittrexDataSource = require('./lib/data/BittrexDataSource').BittrexDataSource;
 var BaseConversionDataSource = require('./lib/data/BaseConversionDataSource').BaseConversionDataSource;
 
 
@@ -16,7 +16,8 @@ peg1.testOutput();
 
 //test inheritance assumptions
 var baseData = new BaseConversionDataSource("test base");
-//var extendData = new TestDataSource("test extend");
+var bittrexData = new BittrexDataSource("https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS");
 
-//console.log("extended:" + (extendData instanceof TestDataSource))
-
+baseData.fetchCurrencyConversionData("");
+console.log("BREAK");
+bittrexData.fetchCurrencyConversionData();

@@ -1,1 +1,9 @@
-{"success":true,"message":"","result":{"Bid":0.00000098,"Ask":0.00000099,"Last":0.00000098}}
+{"success":true,
+  "message":"",
+  "result":
+  {
+    "Bid":0.00000098,
+    "Ask":0.00000099,
+    "Last":0.00000098
+  }
+}

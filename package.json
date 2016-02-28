@@ -17,6 +17,14 @@
   },
   "homepage": "https://github.com/syscoin/pricepeg#readme",
   "dependencies": {
-    "request": "^2.67.0"
+    "babel-preset-es2015": "^6.3.13",
+    "del": "^2.2.0",
+    "gulp-babel": "^6.1.1",
+    "gulp-help": "^1.6.1",
+    "gulp-sequence": "^0.4.4",
+    "gulp-util": "^3.0.7",
+    "request": "^2.69.0",
+    "request-promise": "^2.0.1",
+    "util": "^0.10.3"
   }
 }

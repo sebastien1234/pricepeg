@@ -23,6 +23,7 @@
     "gulp-help": "^1.6.1",
     "gulp-sequence": "^0.4.4",
     "gulp-util": "^3.0.7",
+    "q": "^1.4.1",
     "request": "^2.69.0",
     "request-promise": "^2.0.1",
     "util": "^0.10.3"

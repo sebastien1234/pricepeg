@@ -1,7 +1,6 @@
 'use strict';
 
 var gulp      = require('gulp-help')(require('gulp')),
-  babel       = require('gulp-babel'),
   del         = require('del'),
   sequence    = require('gulp-sequence'),
   gutil       = require('gulp-util');
@@ -10,11 +9,8 @@ var gulp      = require('gulp-help')(require('gulp')),
 //without having to actually modify the gulp tasks
 var config = require('./gulp.config.js');
 
-gulp.task('babelify', false, function() {
+gulp.task('copyJS', false, function() {
   return gulp.src(config.srcJs)
-    .pipe(babel({
-      presets: ['es2015']
-    }))
     .pipe(gulp.dest('dist'));
 });
 
@@ -29,6 +25,6 @@ gulp.task('watch', 'Watches all JS, rebuilds on change', function () {
 });
 
 gulp.task('build', false, function(callback) {
-  sequence('clean', 'babelify')(callback);
+  sequence('clean', 'copyJS')(callback);
 });
 gulp.task('default', false, ['build', 'watch']);

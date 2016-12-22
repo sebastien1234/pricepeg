@@ -4,3 +4,5 @@
 node_modules
 dist
 peg.log
+/dist/
+!/dist/

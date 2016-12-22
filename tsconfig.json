@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "module": "amd",
+        "target": "es5",
+        "noImplicitAny": false,
+        "sourceMap": true,
+        "rootDir": "./src/",
+        "outDir": "./dist",
+        "allowJs": true /* FOR NOW! */
+    },
+    "exclude": [
+        "node_modules",
+        "src/test",
+        "dist",
+        "gulp.config.js",
+        "gulpfile.js"
+    ]
+}

@@ -1,17 +1,15 @@
-'use strict'
+const fs = require('fs');
+const Q = require('q');
 
-var fs = require('fs');
-var Q = require('q');
+import config from './config';
+import BittrrexDataSource from './data/BittrexDataSource';
+import PoloniexDataSource from './data/PoloniexDataSource';
+import CoinbaseDataSource from './data/CoinbaseDataSource';
+import FixerFiatDataSource from './data/FixerFiatDataSource';
+import {CurrencyConversionType} from './data/CurrencyConversion';
+const syscoin = require('syscoin');
 
-var config = require('./config');
-var BittrrexDataSource = require('./data/BittrexDataSource');
-var PoloniexDataSource = require('./data/PoloniexDataSource');
-var CoinbaseDataSource = require('./data/CoinbaseDataSource');
-var FixerFiatDataSource = require('./data/FixerFiatDataSource');
-var CurrencyConversionType = require('./data/CurrencyConversion').CurrencyConversionType;
-var syscoin = require('syscoin');
-
-var client = new syscoin.Client({
+const client = new syscoin.Client({
   host: config.rpcserver,
   port: config.rpcport,
   user: config.rpcuser,
@@ -19,17 +17,16 @@ var client = new syscoin.Client({
   timeout: config.rpctimeout
 });
 
-/*
- interface PricePegEntry {
+interface PricePegEntry {
  currency: string;
  rate: number; // how many SYS equal 1 of this currency
  fee?: number; // fee per byte on transactions in satoshis, defaults to 25
  escrowfee?: number; // escrow fee % for arbiters on offers that use this peg, defaults to 0.005 (0.05%)
  precision: number; // int
- } */
+}
 
 //holds mock peg data for sync testing
-var mockPeg = {
+const mockPeg = {
   "rates": [
     {"currency": "USD", "rate": 0.5, "escrowfee": 0.005, "precision": 2},
     {"currency": "EUR", "rate": 2695.2, "escrowfee": 0.005, "precision": 2},
@@ -41,121 +38,121 @@ var mockPeg = {
   ]
 };
 
-var disableLiveCalls = config.disableLiveCalls,
+const disableLiveCalls = config.disableLiveCalls,
   debugUpdates = config.debugUpdates,
   debugUpdatesInterval = config.debugUpdatesInterval,
   debugUpdateUpdatesIncrement = config.debugUpdatesIncrement;
 
-function PricePeg() {
-  this.sysBTCConversionValue = 0;
-  this.sysZECConversionValue = 0
-  this.btcUSDConversionValue = 0;
+export default class PricePeg {
 
-  this.startTime = null;
-  this.updateHistory = [];
-  this.sysRates = null;
+  public startTime = null;
+  public updateHistory = [];
+  public sysRates = null;
+  public sysBTCConversionValue = 0;
+  public sysZECConversionValue = 0;
+  public btcUSDConversionValue = 0;
 
-  this.updateInterval = null;
+  public updateInterval = null;
 
-  this.fiatDataSource = new FixerFiatDataSource("USD", "US Dollar", "http://api.fixer.io/latest?base=USD");
+  private fiatDataSource = new FixerFiatDataSource("USD", "US Dollar", "http://api.fixer.io/latest?base=USD");
 
-  this.SYSBTCConversionCache = [
+  private SYSBTCConversionCache = [
     /*new BittrrexDataSource("SYS", "Syscoin", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS"),*/
     new PoloniexDataSource(CurrencyConversionType.CRYPTO.SYS, "Syscoin", "https://poloniex.com/public?command=returnTicker", "BTC_SYS.last")
   ];
 
-  this.ZECBTCConversionCache = [
+  private ZECBTCConversionCache = [
     /*new BittrrexDataSource("SYS", "Syscoin", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS"),*/
     new PoloniexDataSource(CurrencyConversionType.CRYPTO.ZEC, "ZCash", "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")
   ];
 
-  this.BTCFiatConversionCache = [
+  private BTCFiatConversionCache = [
     new CoinbaseDataSource("USD", "US Dollar", "https://coinbase.com/api/v1/currencies/exchange_rates")
   ];
 
   if (disableLiveCalls) {
     this.fiatDataSource.formattedCurrencyConversionData = mockPeg;
   }
-}
 
-PricePeg.prototype = {
-  constructor: PricePeg,
+  constructor() {
+  }
 
-  start: function() {
+
+  start = () => {
     console.log("Starting PricePeg with config:", JSON.stringify(config));
 
     if(!disableLiveCalls)
-      client.getInfo(function(err, info, resHeaders) {
+      client.getInfo((err, info, resHeaders) => {
         if (err) {
           console.log(err);
           return this.logPegMessage("Error: " + err);
         }
         console.log('Syscoin Connection Test. Current Blockheight: ', info.blocks);
-      }.bind(this));
+      });
 
     this.startTime = Date.now();
     this.startUpdateInterval();
-  },
+  };
 
-  stop: function() {
+  stop = () => {
     this.stopUpdateInterval();
-  },
+  };
 
-  startUpdateInterval: function () {
-    this.fiatDataSource.fetchCurrencyConversionData().then(function (result) {
+  startUpdateInterval = () => {
+    this.fiatDataSource.fetchCurrencyConversionData().then((result) => {
       if (!debugUpdates) {
         this.refreshCache(true);
 
-        this.updateInterval = setInterval(function () {
+        this.updateInterval = setInterval(() => {
           this.refreshCache(true)
-        }.bind(this), config.updateInterval * 1000);
+        }, config.updateInterval * 1000);
       } else {
         this.checkPricePeg();
 
-        this.updateInterval = setInterval(function () {
+        this.updateInterval = setInterval(() => {
           this.checkPricePeg();
-        }.bind(this), debugUpdatesInterval * 1000);
+        }, debugUpdatesInterval * 1000);
       }
-    }.bind(this));
-  },
+    });
+  };
 
-  stopUpdateInterval: function () {
+  stopUpdateInterval = () => {
     clearInterval(this.updateInterval);
-  },
+  };
 
-  refreshCache: function (checkForPegUpdate) {
+  refreshCache = (checkForPegUpdate) => {
     this.refreshAltsConversionCache(checkForPegUpdate);
     this.refreshBTCConversionCache(checkForPegUpdate);
-  },
+  };
 
-  refreshAltsConversionCache: function (checkForPegUpdate) {
-    var cache = this.SYSBTCConversionCache.concat(this.ZECBTCConversionCache);
-    for(var i = 0; i < cache.length; i++) {
-      cache[i].fetchCurrencyConversionData().then(function (result) {
+  refreshAltsConversionCache = (checkForPegUpdate) => {
+    let cache = this.SYSBTCConversionCache.concat(this.ZECBTCConversionCache);
+    for(let i = 0; i < cache.length; i++) {
+      cache[i].fetchCurrencyConversionData().then((result) => {
         this.isCacheRefreshComplete(checkForPegUpdate);
-      }.bind(this));
+      });
     }
-  },
+  };
 
-  refreshBTCConversionCache: function (checkForPegUpdate) {
-    for (var i = 0; i < this.BTCFiatConversionCache.length; i++) {
-      this.BTCFiatConversionCache[i].fetchCurrencyConversionData().then(function (result) {
+  refreshBTCConversionCache = (checkForPegUpdate) => {
+    for (let i = 0; i < this.BTCFiatConversionCache.length; i++) {
+      this.BTCFiatConversionCache[i].fetchCurrencyConversionData().then((result) => {
         this.isCacheRefreshComplete(checkForPegUpdate);
-      }.bind(this));
+      });
     }
-  },
+  };
 
-  isCacheRefreshComplete: function (checkForPegUpdate) {
-    var allComplete = true;
-    var cache = this.SYSBTCConversionCache.concat(this.ZECBTCConversionCache);
-    for (var i = 0; i < cache.length; i++) {
+  isCacheRefreshComplete = (checkForPegUpdate) => {
+    let allComplete = true;
+    let cache = this.SYSBTCConversionCache.concat(this.ZECBTCConversionCache);
+    for (let i = 0; i < cache.length; i++) {
       if (cache[i].pendingRequest) {
         allComplete = false;
       }
     }
 
     if (allComplete) {
-      for (i = 0; i < this.BTCFiatConversionCache.length; i++) {
+      for (let i = 0; i < this.BTCFiatConversionCache.length; i++) {
         if (this.BTCFiatConversionCache[i].pendingRequest) {
           allComplete = false;
         }
@@ -164,7 +161,7 @@ PricePeg.prototype = {
 
     if (allComplete) {
       //any time we fetch crypto rates, fetch the fiat rates too
-      this.fiatDataSource.fetchCurrencyConversionData().then(function (result) {
+      this.fiatDataSource.fetchCurrencyConversionData().then((result) => {
 
         this.sysBTCConversionValue = this.getSYSBTCAverage();
         this.sysZECConversionValue = this.getSYSZECAverage();
@@ -175,21 +172,21 @@ PricePeg.prototype = {
         if (checkForPegUpdate) {
           this.checkPricePeg();
         }
-      }.bind(this));
+      });
     }
-  },
+  };
 
-  checkPricePeg: function () {
-    var deferred = Q.defer();
+  checkPricePeg = () => {
+    let deferred = Q.defer();
 
-    this.getPricePeg().then(function(currentValue) {
+    this.getPricePeg().then((currentValue) => {
 
       if (this.sysRates == null) {
         console.log("No current value set, setting:" + JSON.stringify(currentValue));
         this.sysRates = currentValue;
       }
 
-      var newValue = this.convertToPricePeg();
+      let newValue = this.convertToPricePeg();
 
       //console.log("NEW: ", JSON.stringify(newValue));
       //console.log("OLD: ", JSON.stringify(currentValue));
@@ -197,7 +194,7 @@ PricePeg.prototype = {
       if(debugUpdates) {
         this.setPricePeg(newValue, currentValue);
       }else{
-        var percentChange = 0;
+        let percentChange = 0;
         if (newValue.rates[0].rate != currentValue.rates[0].rate) { //calc % change
           percentChange = ((newValue.rates[0].rate - currentValue.rates[0].rate) / currentValue.rates[0].rate) * 100;
         }
@@ -208,7 +205,7 @@ PricePeg.prototype = {
 
         if (percentChange > (config.updateThresholdPercentage * 100)) {
           this.logPegMessage("Attempting to update price peg.");
-          this.setPricePeg(newValue, currentValue).then(function (result) {
+          this.setPricePeg(newValue, currentValue).then((result) => {
             deferred.resolve(result);
           });
         } else {
@@ -216,23 +213,23 @@ PricePeg.prototype = {
         }
       }
 
-    }.bind(this))
+    })
 
-    .catch(function(err) {
+    .catch((err) => {
       console.log("ERROR:" + err);
       deferred.reject(err);
-    }.bind(this));
+    });
 
     return deferred.promise;
-  },
+  };
 
-  getPricePeg: function () {
-    var deferred = Q.defer();
+  getPricePeg = () => {
+    let deferred = Q.defer();
 
     if(disableLiveCalls) {
       deferred.resolve(mockPeg);
     }else{
-      client.aliasInfo(config.pegalias, function (err, aliasinfo, resHeaders) {
+      client.aliasInfo(config.pegalias, (err, aliasinfo, resHeaders) => {
         if (err) {
           console.log(err);
           this.logPegMessage("Error: " + err);
@@ -240,32 +237,32 @@ PricePeg.prototype = {
         }
 
         deferred.resolve(JSON.parse(aliasinfo.value));
-      }.bind(this));
+      });
     }
 
     return deferred.promise;
-  },
+  };
 
-  setPricePeg: function (newValue, oldValue) {
-    var deferred = Q.defer();
+  setPricePeg = (newValue, oldValue) => {
+    let deferred = Q.defer();
 
     //guard against updating the peg too rapidly
-    var now = Date.now();
-    var currentInterval = (1000 * 60 * 60 * 24) + (now - this.startTime);
+    let now = Date.now();
+    let currentInterval = (1000 * 60 * 60 * 24) + (now - this.startTime);
     currentInterval = (currentInterval / (config.updatePeriod * 1000)) % 1; //get remainder of unfinished interval
 
     //see how many updates have happened in this period
-    var currentIntervalStartTime = now - ((config.updatePeriod * 1000) * currentInterval);
+    let currentIntervalStartTime = now - ((config.updatePeriod * 1000) * currentInterval);
 
-    var updatesInThisPeriod = 0;
+    let updatesInThisPeriod = 0;
     console.log("trying to set");
-    updatesInThisPeriod += this.updateHistory.filter(function (item) {
+    updatesInThisPeriod += this.updateHistory.filter((item) => {
       return item.date > currentIntervalStartTime;
     }).length;
 
     if (updatesInThisPeriod <= config.maxUpdatesPerPeriod || debugUpdates) {
       if(!disableLiveCalls) {
-        client.aliasUpdate(config.pegalias, config.pegalias_aliaspeg, JSON.stringify(newValue), function (err, result, resHeaders) {
+        client.aliasUpdate(config.pegalias, config.pegalias_aliaspeg, JSON.stringify(newValue), (err, result, resHeaders) => {
           if (err) {
             console.log(err);
             this.logPegMessage("Error:" + err);
@@ -274,7 +271,7 @@ PricePeg.prototype = {
             this.logUpdate(newValue, oldValue); //always story the pre-update value so it makes sense when displayed
             deferred.resolve(result);
           }
-        }.bind(this));
+        });
       }else{
         this.logUpdate(newValue, oldValue);
         deferred.resolve(newValue);
@@ -285,9 +282,9 @@ PricePeg.prototype = {
     }
 
     return deferred.promise;
-  },
+  };
 
-  logUpdate: function (newValue, oldValue) {
+  logUpdate = (newValue, oldValue) => {
     //store prev value
     this.updateHistory.push({
       date: Date.now(),
@@ -297,18 +294,18 @@ PricePeg.prototype = {
     this.sysRates = newValue;
 
     this.logPegMessage("Price peg updated successfully.");
-  },
+  };
 
-  getFiatRate: function (usdRate, conversionRate, precision) {
-    var rate = 0;
+  getFiatRate = (usdRate, conversionRate, precision) => {
+    let rate = 0;
 
     rate = usdRate / conversionRate;
 
     return this.getFixedRate(rate, precision);
-  },
+  };
 
-  getSYSFiatValue: function (fiatType) {
-    var convertedValue;
+  getSYSFiatValue = (fiatType) => {
+    let convertedValue;
     switch (fiatType) {
       case "USD":
         convertedValue = 1 / this.btcUSDConversionValue;
@@ -322,13 +319,13 @@ PricePeg.prototype = {
     }
 
     return convertedValue;
-  },
+  };
 
-  getFixedRate: function (rate, precision) {
+  getFixedRate = (rate, precision) => {
     return parseFloat(parseFloat(rate).toFixed(precision));
-  },
+  };
 
-  convertToPricePeg: function () {
+  convertToPricePeg = () => {
     return {
       rates: [
         {
@@ -362,14 +359,14 @@ PricePeg.prototype = {
         },
         {
           "currency": CurrencyConversionType.CRYPTO.BTC,
-          "rate": this.getFixedRate(1 / parseFloat(this.sysBTCConversionValue), 8),
+          "rate": this.getFixedRate(1 / parseFloat(this.sysBTCConversionValue.toString()), 8),
           "escrowfee": 0.01,
           "fee": 75,
           "precision": 8
         },
         {
           "currency": CurrencyConversionType.CRYPTO.ZEC,
-          "rate": this.getFixedRate(parseFloat(this.sysZECConversionValue), 8),
+          "rate": this.getFixedRate(parseFloat(this.sysZECConversionValue.toString()), 8),
           "escrowfee": 0.01,
           "fee": 50,
           "precision": 8
@@ -383,66 +380,63 @@ PricePeg.prototype = {
         }
       ]
     }
-  },
+  };
 
-  getSYSBTCAverage: function(amount) {
-    if (!amount)
-      amount = 1;
-
+  getSYSBTCAverage = (amount: number = 1) => {
     //first get the average across all the conversions
-    var avgSum = 0;
+    let avgSum = 0;
 
-    for(var i = 0; i < this.SYSBTCConversionCache.length; i++) {
+    for(let i = 0; i < this.SYSBTCConversionCache.length; i++) {
       avgSum += this.SYSBTCConversionCache[i].formattedCurrencyConversionData.toCurrencyAmount;
     }
 
-    var avgVal = avgSum / this.SYSBTCConversionCache.length;
+    let avgVal = avgSum / this.SYSBTCConversionCache.length;
 
     return avgVal * amount;
-  },
+  };
 
-  getSYSZECAverage: function(amount) {
+  getSYSZECAverage = (amount: number = 1) => {
     if (!amount)
       amount = 1;
 
     //first get the average across all the conversions
-    var avgSum = 0;
+    let avgSum = 0;
 
-    for(var i = 0; i < this.ZECBTCConversionCache.length; i++) {
+    for(let i = 0; i < this.ZECBTCConversionCache.length; i++) {
       avgSum += this.ZECBTCConversionCache[i].formattedCurrencyConversionData.toCurrencyAmount;
     }
 
-    var avgZECVal = avgSum / this.ZECBTCConversionCache.length;
-    var avgSYSVal = this.getSYSBTCAverage(amount);
+    let avgZECVal = avgSum / this.ZECBTCConversionCache.length;
+    let avgSYSVal = this.getSYSBTCAverage(amount);
 
-    var avgVal = avgZECVal / avgSYSVal;
+    let avgVal = avgZECVal / avgSYSVal;
 
     console.log("ZEC:", avgZECVal + " n " + avgSYSVal);
 
     return avgVal * amount;
-  },
+  };
 
-  getBTCUSDAverage: function (amount) {
+  getBTCUSDAverage = (amount: number = 1) => {
     if (!amount)
       amount = 1;
 
     //first get the average across all the conversions
-    var avgSum = 0;
+    let avgSum = 0;
 
-    for (var i = 0; i < this.BTCFiatConversionCache.length; i++) {
+    for (let i = 0; i < this.BTCFiatConversionCache.length; i++) {
       avgSum += this.BTCFiatConversionCache[i].formattedCurrencyConversionData.toCurrencyAmount;
     }
 
-    var avgVal = avgSum / this.BTCFiatConversionCache.length;
+    let avgVal = avgSum / this.BTCFiatConversionCache.length;
 
     return avgVal * amount;
-  },
+  };
 
-  lookupBTCFiatConversion: function(fiatType) {
+  lookupBTCFiatConversion = (fiatType) => {
     //return the BTC conversion for a specific type of fiat, will support multiple
-  },
+  };
 
-  logPegMessage: function(msg) {
+  logPegMessage = (msg) => {
     msg = new Date() + " - " + msg;
     console.log(msg);
     fs.appendFile("./peg.log", msg + "\n", function (err) {
@@ -450,23 +444,21 @@ PricePeg.prototype = {
         return console.log(err);
       }
     });
-  },
+  };
 
-  getHumanDate: function (time) {
+  getHumanDate = (time) => {
     // Create a new JavaScript Date object based on the timestamp
-    var date = new Date(time);
+    let date = new Date(time);
     // Hours part from the timestamp
-    var hours = date.getHours();
+    let hours = date.getHours();
     // Minutes part from the timestamp
-    var minutes = "0" + date.getMinutes();
+    let minutes = "0" + date.getMinutes();
     // Seconds part from the timestamp
-    var seconds = "0" + date.getSeconds();
+    let seconds = "0" + date.getSeconds();
 
     // Will display time in 10:30:23 format
-    var formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+    let formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
 
     return formattedTime;
   }
 };
-
-module.exports = PricePeg;

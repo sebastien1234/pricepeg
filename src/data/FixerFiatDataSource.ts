@@ -1,19 +1,8 @@
-'use strict'
 
-var util = require('util');
+import BaseConversionDataSource from "./BaseConversionDataSource";
 
-var BaseConversionDataSource = require('./BaseConversionDataSource');
-var CurrencyConversion = require('./CurrencyConversion');
-
-function FixerFiatDataSource(baseCurrencySymbol, baseCurrencyLabel, dataUrl, responseDataPath) {
-  BaseConversionDataSource.call(this, baseCurrencySymbol, baseCurrencyLabel, dataUrl, responseDataPath);
-  util.inherits(FixerFiatDataSource, BaseConversionDataSource);
-}
-
-FixerFiatDataSource.prototype = {
-  constructor: FixerFiatDataSource,
-
-  formatCurrencyConversionData: function (rawCurrencyResponseData) {
+export default class FixerFiatDataSource extends BaseConversionDataSource {
+  formatCurrencyConversionData = (rawCurrencyResponseData) => {
     //rather than returning an CurrencyConversion object this returns an object that has properties for each of the fiat
     //currencies. Intended to be used against USD only.
     //supported:
@@ -27,8 +16,5 @@ FixerFiatDataSource.prototype = {
       GBP: rawCurrencyResponseData.rates.GBP,
       EUR: rawCurrencyResponseData.rates.EUR
     }
-  }
-};
-
-
-module.exports = FixerFiatDataSource;
+  };
+}

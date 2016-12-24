@@ -1,50 +1,55 @@
-'use strict';
+"use strict";
 var rp = require('request-promise');
 var Q = require('q');
-function BaseConversionDataSource(baseCurrencySymbol, baseCurrencyLabel, dataUrl, responseDataPath) {
-    this.dataUrl = dataUrl;
-    this.baseCurrencySymbol = baseCurrencySymbol;
-    this.baseCurrencyLabel = baseCurrencyLabel;
-    this.responseDataPath = responseDataPath;
-    this.rawCurrencyConversionData;
-    this.formattedCurrencyConversionData; //should always be of type CurrencyConversion for to/from 1
-    this.lastFetchAttemptTime = 0;
-    this.lastSuccessfulFetchTime = 0;
-    this.pendingRequest = false;
-}
-BaseConversionDataSource.prototype = {
-    constructor: BaseConversionDataSource,
-    formatCurrencyConversionData: function (rawCurrencyResponseData) {
-        //convert the raw currency conversion data to a standard format, may differ by datasource
-        console.log("Handling response in base data source handler.");
-        return null; //this should be overridden!
-    },
-    fetchCurrencyConversionData: function () {
-        //console.log("Fetching currency data from: " + this.baseCurrencyLabel + " - " + this.baseCurrencySymbol + " => " + this.dataUrl);
-        this.pendingRequest = true;
-        this.lastFetchAttemptTime = Date.now();
-        var deferred = Q.defer();
-        rp.get({
-            uri: this.dataUrl,
-            json: true
-        }).then(function (parsedBody) {
-            this.pendingRequest = false;
-            this.handleFetchCurrencyConversionData(parsedBody);
-            deferred.resolve();
-        }.bind(this))
-            .catch(function (err) {
-            this.pendingRequest = false;
-            console.log("Error requesting data.", err);
-            deferred.reject(err);
-        }.bind(this));
-        return deferred.promise;
-    },
-    handleFetchCurrencyConversionData: function (response) {
-        this.rawCurrencyConversionData = response;
-        this.lastSuccessfulFetchTime = Date.now();
-        //console.log(this.dataUrl + " returned: " + JSON.stringify(this.rawCurrencyConversionData));
-        this.formatCurrencyConversionData(this.rawCurrencyConversionData);
+var BaseConversionDataSource = (function () {
+    function BaseConversionDataSource(baseCurrencySymbol, baseCurrencyLabel, dataUrl, responseDataPath) {
+        if (responseDataPath === void 0) { responseDataPath = null; }
+        var _this = this;
+        this.baseCurrencySymbol = baseCurrencySymbol;
+        this.baseCurrencyLabel = baseCurrencyLabel;
+        this.dataUrl = dataUrl;
+        this.responseDataPath = responseDataPath;
+        this.lastFetchAttemptTime = 0;
+        this.lastSuccessfulFetchTime = 0;
+        this.pendingRequest = false;
+        this.formatCurrencyConversionData = function (rawCurrencyResponseData) {
+            //convert the raw currency conversion data to a standard format, may differ by datasource
+            console.log("Handling response in base data source handler.");
+            return null; //this should be overridden!
+        };
+        this.fetchCurrencyConversionData = function () {
+            //console.log("Fetching currency data from: " + this.baseCurrencyLabel + " - " + this.baseCurrencySymbol + " => " + this.dataUrl);
+            _this.pendingRequest = true;
+            _this.lastFetchAttemptTime = Date.now();
+            var deferred = Q.defer();
+            rp.get({
+                uri: _this.dataUrl,
+                json: true
+            }).then(function (parsedBody) {
+                _this.pendingRequest = false;
+                _this.handleFetchCurrencyConversionData(parsedBody);
+                deferred.resolve();
+            })
+                .catch(function (err) {
+                _this.pendingRequest = false;
+                console.log("Error requesting data.", err);
+                deferred.reject(err);
+            });
+            return deferred.promise;
+        };
+        this.handleFetchCurrencyConversionData = function (response) {
+            _this.rawCurrencyConversionData = response;
+            _this.lastSuccessfulFetchTime = Date.now();
+            //console.log(this.dataUrl + " returned: " + JSON.stringify(this.rawCurrencyConversionData));
+            _this.formatCurrencyConversionData(_this.rawCurrencyConversionData);
+        };
+        this.dataUrl = dataUrl;
+        this.baseCurrencySymbol = baseCurrencySymbol;
+        this.baseCurrencyLabel = baseCurrencyLabel;
+        this.responseDataPath = responseDataPath;
     }
-};
-module.exports = BaseConversionDataSource;
+    return BaseConversionDataSource;
+}());
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = BaseConversionDataSource;
 //# sourceMappingURL=BaseConversionDataSource.js.map

@@ -1,7 +1,8 @@
-var config = {
+"use strict";
+exports.config = {
     maxUpdatesPerPeriod: 6,
     updatePeriod: 60 * 60 * 1,
-    updateThresholdPercentage: 0.05,
+    updateThresholdPercentage: 0.01,
     updateVolatilityWarning: 100,
     updateInterval: 10,
     disableLiveCalls: false,
@@ -17,5 +18,6 @@ var config = {
     pegalias_aliaspeg: "pegtest1",
     httpport: 8080
 };
-module.exports = config;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = exports.config;
 //# sourceMappingURL=config.js.map

@@ -1,7 +1,7 @@
-var config = {
+export const config = {
   maxUpdatesPerPeriod: 6, // maximum number of peg updates that will occur in a single period
   updatePeriod: 60 * 60 * 1, //duration of a single period in seconds
-  updateThresholdPercentage: 0.05, //percentage at which an update is attempted, if value of peg fluctuates +/- this range
+  updateThresholdPercentage: 0.01, //percentage at which an update is attempted, if value of peg fluctuates +/- this range
   updateVolatilityWarning: 100, //number of update attempts in a single period after which to alert admins to unusual volatility, possibly warranting temp config change
   updateInterval: 10, //time in second to check for updates
 
@@ -22,4 +22,4 @@ var config = {
 
 };
 
-module.exports = config;
+export default config;

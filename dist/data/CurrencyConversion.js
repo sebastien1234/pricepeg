@@ -1,19 +1,24 @@
-'use strict';
-function CurrencyConversion(fromSymbol, fromLabel, fromAmount, toSymbol, toLabel, toAmount) {
-    this.fromCurrencySymbol = fromSymbol;
-    this.fromCurrencyLabel = fromLabel;
-    this.fromCurrencyAmount = fromAmount;
-    this.toCurrencySymbol = toSymbol;
-    this.toCurrencyLabel = toLabel;
-    this.toCurrencyAmount = toAmount;
-}
-CurrencyConversion.prototype = {
-    constructor: CurrencyConversion,
-    print: function () {
-        console.log(JSON.stringify(this));
+"use strict";
+var CurrencyConversion = (function () {
+    function CurrencyConversion(fromCurrencySymbol, fromCurrencyLabel, fromCurrencyAmount, toCurrencySymbol, toCurrencyLabel, toCurrencyAmount) {
+        this.fromCurrencySymbol = fromCurrencySymbol;
+        this.fromCurrencyLabel = fromCurrencyLabel;
+        this.fromCurrencyAmount = fromCurrencyAmount;
+        this.toCurrencySymbol = toCurrencySymbol;
+        this.toCurrencyLabel = toCurrencyLabel;
+        this.toCurrencyAmount = toCurrencyAmount;
+        this.fromCurrencySymbol = fromCurrencySymbol;
+        this.fromCurrencyLabel = fromCurrencyLabel;
+        this.fromCurrencyAmount = fromCurrencyAmount;
+        this.toCurrencySymbol = toCurrencySymbol;
+        this.toCurrencyLabel = toCurrencyLabel;
+        this.toCurrencyAmount = toCurrencyAmount;
     }
-};
-var CurrencyConversionType = {
+    return CurrencyConversion;
+}());
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = CurrencyConversion;
+exports.CurrencyConversionType = {
     FIAT: {
         USD: "USD",
         GBP: "GBP",
@@ -27,6 +32,4 @@ var CurrencyConversionType = {
         ZEC: "ZEC"
     }
 };
-module.exports = CurrencyConversion;
-module.exports.CurrencyConversionType = CurrencyConversionType;
 //# sourceMappingURL=CurrencyConversion.js.map

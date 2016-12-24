@@ -1,17 +1,15 @@
-'use strict'
-
-var express = require('express'),
+let express = require('express'),
   app = express(),
   server = require('http').createServer(app);
 
-var config = require('./config');
-var PricePeg = require('./PricePeg');
-var history = require('./history');
+import config from './config';
+import PricePeg from './PricePeg';
+import history from './history';
 
-var peg = new PricePeg();
+let peg = new PricePeg();
 peg.start();
 
-var PORT = config.httpport;
+let PORT = config.httpport;
 
 app.use('/', express.static(__dirname + '/static'));
 

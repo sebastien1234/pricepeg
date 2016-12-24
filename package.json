@@ -4,7 +4,7 @@
   "description": "Maintains SYS price peg against a variety of currencies",
   "main": "index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "rm -rf dist && tsc && cp -R ./src/static/ ./dist/static"
   },
   "repository": {
     "type": "git",
@@ -26,8 +26,7 @@
     "http": "0.0.0",
     "q": "^1.4.1",
     "request-promise": "^2.0.1",
-    "syscoin": "2.2.0",
-    "util": "^0.10.3"
+    "syscoin": "2.2.0"
   },
   "devDependencies": {
     "@types/node": "^6.0.52",

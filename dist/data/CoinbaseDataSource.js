@@ -1,17 +1,24 @@
-'use strict';
-var util = require('util');
-var BaseConversionDataSource = require('./BaseConversionDataSource');
-var CurrencyConversion = require('./CurrencyConversion');
-function CoinbaseDataSource(baseCurrencySymbol, baseCurrencyLabel, dataUrl, responseDataPath) {
-    BaseConversionDataSource.call(this, baseCurrencySymbol, baseCurrencyLabel, dataUrl, responseDataPath);
-    util.inherits(CoinbaseDataSource, BaseConversionDataSource);
-}
-CoinbaseDataSource.prototype = {
-    constructor: CoinbaseDataSource,
-    formatCurrencyConversionData: function (rawCurrencyResponseData) {
-        //console.log("Handling response in coinbase handler.");
-        this.formattedCurrencyConversionData = new CurrencyConversion(this.baseCurrencySymbol, this.baseCurrencyLabel, 1, "BTC", "Bitcoin", rawCurrencyResponseData.btc_to_usd);
-    }
+"use strict";
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-module.exports = CoinbaseDataSource;
+var BaseConversionDataSource_1 = require("./BaseConversionDataSource");
+var CurrencyConversion_1 = require("./CurrencyConversion");
+var CoinbaseDataSource = (function (_super) {
+    __extends(CoinbaseDataSource, _super);
+    function CoinbaseDataSource() {
+        var _this = _super.apply(this, arguments) || this;
+        _this.formatCurrencyConversionData = function (rawCurrencyResponseData) {
+            //console.log("Handling response in coinbase handler.");
+            _this.formattedCurrencyConversionData = new CurrencyConversion_1.default(_this.baseCurrencySymbol, _this.baseCurrencyLabel, 1, "BTC", "Bitcoin", rawCurrencyResponseData.btc_to_usd);
+        };
+        return _this;
+    }
+    return CoinbaseDataSource;
+}(BaseConversionDataSource_1.default));
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = CoinbaseDataSource;
+;
 //# sourceMappingURL=CoinbaseDataSource.js.map

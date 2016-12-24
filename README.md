@@ -1,6 +1,6 @@
 # Syscoin Price Peg
 
-STuff here about what the peg does
+The Syscoin Price Peg is a node server application that uses data from various FIAT/BTC and AltCoin/BTC market APIs (Fixer, Coinbase, Poloniex, Bittrex, etc.) to maintain a  Syscoin "Alias Peg" for the Syscoin network. An Alias peg provides information to the network on how many Syscoins are needed to equal 1 unit of any other currency supported by the peg.
 
 Installing
 ---

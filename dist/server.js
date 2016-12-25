@@ -1,8 +1,8 @@
 "use strict";
-var express = require('express'), app = express(), server = require('http').createServer(app);
 var config_1 = require("./config");
 var PricePeg_1 = require("./PricePeg");
 var history_1 = require("./history");
+var express = require('express'), app = express(), server = require('http').createServer(app);
 var peg = new PricePeg_1.default();
 peg.start();
 var PORT = config_1.default.httpport;

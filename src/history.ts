@@ -1,6 +1,8 @@
 import config from './config';
+import PricePeg from "./PricePeg";
 
-export const getHistoryPage = (req, res, peg) => {
+export const getHistoryPage = (req, res, peg: PricePeg) => {
+  const updateTime = (config.updateInterval / 60).toFixed(2).indexOf(".00") == -1 ? (config.updateInterval / 60).toFixed(2) : (config.updateInterval / 60);
   res.writeHead(200, {'Content-Type': 'text/html'});
   res.write(`
     <!DOCTYPE html><html><head> 
@@ -27,7 +29,7 @@ export const getHistoryPage = (req, res, peg) => {
     <p style="font-size:18px; text-align: center">
     The Syscoin Team price peg uses the "sysrates.peg" alias on the Syscoin blockchain and is the default price peg for all items being sold on the 
     Syscoin Decentralized Marketplace. The price peg uses averages SYS/BTC rates from Bittrex and Poloniex, USD/BTC rates from Coinbase, and USD/Fiat rates from Fixer.io. <br><br>
-    The "sysrates.peg" price peg is updated anytime the SYS/BTC or USD/BTC price moves +/- 5% of the current values stored on the blockchain, this check is performed every ` + (config.updateInterval / 60) + ` minutes. 
+    The "sysrates.peg" price peg is updated anytime the SYS/BTC or USD/BTC price moves +/- 5% of the current values stored on the blockchain, this check is performed every ` + updateTime + ` minutes. 
     The rates below represent the amount of Syscoin it would take to equal 1 unit of the given currencies based on market rates. 
     For more information on how price pegging works in Syscoin please <a href="http://syscoin.org/faqs/price-pegging-work/">see the FAQ.</a><br><br>
     Values in the below are trimmed to 2 decimals. Full value can be seen in history here or on the blockchain. To support the Syscoin team price peg please send SYS to "sysrates.peg", all funds are used to cover alias update costs.</p>
@@ -71,7 +73,7 @@ export const getHistoryPage = (req, res, peg) => {
   res.end();
 };
 
-export const timeConverter = (UNIX_timestamp) => {
+export const timeConverter = (UNIX_timestamp: number) => {
   let a = new Date(UNIX_timestamp);
   let months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   let year = a.getFullYear();

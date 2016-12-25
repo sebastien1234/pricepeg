@@ -26,7 +26,6 @@ var mockPeg = {
         { "currency": "SYS", "rate": 1.0, "fee": 1000, "escrowfee": 0.005, "precision": 2 }
     ]
 };
-var disableLiveCalls = config_1.default.disableLiveCalls, debugUpdates = config_1.default.debugUpdates, debugUpdatesInterval = config_1.default.debugUpdatesInterval, debugUpdateUpdatesIncrement = config_1.default.debugUpdatesIncrement;
 var PricePeg = (function () {
     function PricePeg() {
         var _this = this;
@@ -51,7 +50,7 @@ var PricePeg = (function () {
         ];
         this.start = function () {
             console.log("Starting PricePeg with config:", JSON.stringify(config_1.default));
-            if (!disableLiveCalls)
+            if (!config_1.default.disableLiveCalls)
                 client.getInfo(function (err, info, resHeaders) {
                     if (err) {
                         console.log(err);
@@ -67,7 +66,7 @@ var PricePeg = (function () {
         };
         this.startUpdateInterval = function () {
             _this.fiatDataSource.fetchCurrencyConversionData().then(function (result) {
-                if (!debugUpdates) {
+                if (!config_1.default.debugUpdates) {
                     _this.refreshCache(true);
                     _this.updateInterval = setInterval(function () {
                         _this.refreshCache(true);
@@ -77,7 +76,7 @@ var PricePeg = (function () {
                     _this.checkPricePeg();
                     _this.updateInterval = setInterval(function () {
                         _this.checkPricePeg();
-                    }, debugUpdatesInterval * 1000);
+                    }, config_1.default.debugUpdatesInterval * 1000);
                 }
             });
         };
@@ -113,7 +112,7 @@ var PricePeg = (function () {
                 var newValue = _this.convertToPricePeg();
                 //console.log("NEW: ", JSON.stringify(newValue));
                 //console.log("OLD: ", JSON.stringify(currentValue));
-                if (debugUpdates) {
+                if (config_1.default.debugUpdates) {
                     _this.setPricePeg(newValue, currentValue);
                 }
                 else {
@@ -142,7 +141,7 @@ var PricePeg = (function () {
         };
         this.getPricePeg = function () {
             var deferred = Q.defer();
-            if (disableLiveCalls) {
+            if (config_1.default.disableLiveCalls) {
                 deferred.resolve(mockPeg);
             }
             else {
@@ -170,8 +169,8 @@ var PricePeg = (function () {
             updatesInThisPeriod += _this.updateHistory.filter(function (item) {
                 return item.date > currentIntervalStartTime;
             }).length;
-            if (updatesInThisPeriod <= config_1.default.maxUpdatesPerPeriod || debugUpdates) {
-                if (!disableLiveCalls) {
+            if (updatesInThisPeriod <= config_1.default.maxUpdatesPerPeriod || config_1.default.debugUpdates) {
+                if (!config_1.default.disableLiveCalls) {
                     client.aliasUpdate(config_1.default.pegalias, config_1.default.pegalias_aliaspeg, JSON.stringify(newValue), function (err, result, resHeaders) {
                         if (err) {
                             console.log(err);
@@ -217,9 +216,9 @@ var PricePeg = (function () {
                     convertedValue = convertedValue / _this.sysBTCConversionValue;
                     break;
             }
-            if (debugUpdates) {
+            if (config_1.default.debugUpdates) {
                 console.log("Current this.sysRates ", JSON.stringify(_this.sysRates.rates));
-                convertedValue = _this.sysRates.rates[0].rate + debugUpdateUpdatesIncrement;
+                convertedValue = _this.sysRates.rates[0].rate + config_1.default.debugUpdatesIncrement;
             }
             return convertedValue;
         };
@@ -328,10 +327,10 @@ var PricePeg = (function () {
                 }
             });
         };
+        if (config_1.default.disableLiveCalls) {
+            this.fiatDataSource.formattedCurrencyConversionData = mockPeg;
+        }
     }
-    PricePeg.prototype.if = function (disableLiveCalls) {
-        this.fiatDataSource.formattedCurrencyConversionData = mockPeg;
-    };
     return PricePeg;
 }());
 Object.defineProperty(exports, "__esModule", { value: true });

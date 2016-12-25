@@ -17,17 +17,6 @@ const client = new syscoin.Client({
   timeout: config.rpctimeout
 });
 
-interface PricePegModel {
-  rates: PricePegEntry[];
-}
-
-interface PricePegEntry {
- currency: string;
- rate: number; // how many SYS equal 1 of this currency
- fee?: number; // fee per byte on transactions in satoshis, defaults to 25
- escrowfee?: number; // escrow fee % for arbiters on offers that use this peg, defaults to 0.005 (0.05%)
- precision: number; // int
-}
 
 //holds mock peg data for sync testing
 const mockPeg: PricePegModel = {
@@ -41,11 +30,6 @@ const mockPeg: PricePegModel = {
     {"currency": "SYS", "rate": 1.0, "fee": 1000, "escrowfee": 0.005, "precision": 2}
   ]
 };
-
-const disableLiveCalls = config.disableLiveCalls,
-  debugUpdates = config.debugUpdates,
-  debugUpdatesInterval = config.debugUpdatesInterval,
-  debugUpdateUpdatesIncrement = config.debugUpdatesIncrement;
 
 export default class PricePeg {
 
@@ -74,14 +58,16 @@ export default class PricePeg {
     new CoinbaseDataSource("USD", "US Dollar", "https://coinbase.com/api/v1/currencies/exchange_rates")
   ];
 
-  if (disableLiveCalls) {
-    this.fiatDataSource.formattedCurrencyConversionData = mockPeg;
+  constructor() {
+    if (config.disableLiveCalls) {
+      this.fiatDataSource.formattedCurrencyConversionData = mockPeg;
+    }
   }
 
   start = () => {
     console.log("Starting PricePeg with config:", JSON.stringify(config));
 
-    if(!disableLiveCalls)
+    if(!config.disableLiveCalls)
       client.getInfo((err, info, resHeaders) => {
         if (err) {
           console.log(err);
@@ -100,7 +86,7 @@ export default class PricePeg {
 
   startUpdateInterval = () => {
     this.fiatDataSource.fetchCurrencyConversionData().then((result) => {
-      if (!debugUpdates) {
+      if (!config.debugUpdates) {
         this.refreshCache(true);
 
         this.updateInterval = setInterval(() => {
@@ -111,7 +97,7 @@ export default class PricePeg {
 
         this.updateInterval = setInterval(() => {
           this.checkPricePeg();
-        }, debugUpdatesInterval * 1000);
+        }, config.debugUpdatesInterval * 1000);
       }
     });
   };
@@ -159,7 +145,7 @@ export default class PricePeg {
       //console.log("NEW: ", JSON.stringify(newValue));
       //console.log("OLD: ", JSON.stringify(currentValue));
 
-      if(debugUpdates) {
+      if(config.debugUpdates) {
         this.setPricePeg(newValue, currentValue);
       }else{
         let percentChange = 0;
@@ -194,7 +180,7 @@ export default class PricePeg {
   getPricePeg = () => {
     let deferred = Q.defer();
 
-    if(disableLiveCalls) {
+    if(config.disableLiveCalls) {
       deferred.resolve(mockPeg);
     }else{
       client.aliasInfo(config.pegalias, (err, aliasinfo, resHeaders) => {
@@ -228,8 +214,8 @@ export default class PricePeg {
       return item.date > currentIntervalStartTime;
     }).length;
 
-    if (updatesInThisPeriod <= config.maxUpdatesPerPeriod || debugUpdates) {
-      if(!disableLiveCalls) {
+    if (updatesInThisPeriod <= config.maxUpdatesPerPeriod || config.debugUpdates) {
+      if(!config.disableLiveCalls) {
         client.aliasUpdate(config.pegalias, config.pegalias_aliaspeg, JSON.stringify(newValue), (err, result, resHeaders) => {
           if (err) {
             console.log(err);
@@ -281,9 +267,9 @@ export default class PricePeg {
         break;
     }
 
-    if (debugUpdates) {
+    if (config.debugUpdates) {
       console.log("Current this.sysRates ", JSON.stringify(this.sysRates.rates));
-      convertedValue = this.sysRates.rates[0].rate + debugUpdateUpdatesIncrement;
+      convertedValue = this.sysRates.rates[0].rate + config.debugUpdatesIncrement;
     }
 
     return convertedValue;
@@ -410,3 +396,15 @@ export default class PricePeg {
     });
   };
 };
+
+interface PricePegModel {
+  rates: PricePegEntry[];
+}
+
+interface PricePegEntry {
+  currency: string;
+  rate: number; // how many SYS equal 1 of this currency
+  fee?: number; // fee per byte on transactions in satoshis, defaults to 25
+  escrowfee?: number; // escrow fee % for arbiters on offers that use this peg, defaults to 0.005 (0.05%)
+  precision: number; // int
+}

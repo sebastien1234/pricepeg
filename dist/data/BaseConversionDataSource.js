@@ -11,7 +11,6 @@ var BaseConversionDataSource = (function () {
         this.responseDataPath = responseDataPath;
         this.lastFetchAttemptTime = 0;
         this.lastSuccessfulFetchTime = 0;
-        this.pendingRequest = false;
         this.formatCurrencyConversionData = function (rawCurrencyResponseData) {
             //convert the raw currency conversion data to a standard format, may differ by datasource
             console.log("Handling response in base data source handler.");
@@ -19,19 +18,16 @@ var BaseConversionDataSource = (function () {
         };
         this.fetchCurrencyConversionData = function () {
             //console.log("Fetching currency data from: " + this.baseCurrencyLabel + " - " + this.baseCurrencySymbol + " => " + this.dataUrl);
-            _this.pendingRequest = true;
             _this.lastFetchAttemptTime = Date.now();
             var deferred = Q.defer();
             rp.get({
                 uri: _this.dataUrl,
                 json: true
             }).then(function (parsedBody) {
-                _this.pendingRequest = false;
                 _this.handleFetchCurrencyConversionData(parsedBody);
                 deferred.resolve();
             })
                 .catch(function (err) {
-                _this.pendingRequest = false;
                 console.log("Error requesting data.", err);
                 deferred.reject(err);
             });

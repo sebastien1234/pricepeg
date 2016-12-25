@@ -1,12 +1,12 @@
-export const getDeepValue = (obj, path:string) => {
+export const getDeepValue = (obj: any, path:string) => {
   for (let i=0, pathParts=path.split('.'), len=pathParts.length; i<len; i++){
     obj = obj[pathParts[i]];
-  };
+  }
 
   return obj;
 };
 
-export const getHumanDate = (time) => {
+export const getHumanDate = (time: number): string => {
   // Create a new JavaScript Date object based on the timestamp
   let date = new Date(time);
   // Hours part from the timestamp
@@ -17,9 +17,7 @@ export const getHumanDate = (time) => {
   let seconds = "0" + date.getSeconds();
 
   // Will display time in 10:30:23 format
-  let formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
-
-  return formattedTime;
+  return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
 };
 
 export default getDeepValue;

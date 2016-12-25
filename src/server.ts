@@ -1,10 +1,10 @@
-let express = require('express'),
-  app = express(),
-  server = require('http').createServer(app);
-
 import config from './config';
 import PricePeg from './PricePeg';
 import history from './history';
+
+let express = require('express'),
+  app = express(),
+  server = require('http').createServer(app);
 
 let peg = new PricePeg();
 peg.start();

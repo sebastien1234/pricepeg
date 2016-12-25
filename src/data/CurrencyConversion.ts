@@ -1,6 +1,6 @@
 
 export default class CurrencyConversion {
-  constructor(public fromCurrencySymbol, public fromCurrencyLabel, public fromCurrencyAmount, public toCurrencySymbol, public toCurrencyLabel, public toCurrencyAmount) {
+  constructor(public fromCurrencySymbol: string, public fromCurrencyLabel: string, public fromCurrencyAmount: number, public toCurrencySymbol: string, public toCurrencyLabel: string, public toCurrencyAmount: number) {
     this.fromCurrencySymbol = fromCurrencySymbol;
     this.fromCurrencyLabel = fromCurrencyLabel;
     this.fromCurrencyAmount = fromCurrencyAmount;

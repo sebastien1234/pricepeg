@@ -3,7 +3,6 @@ exports.getDeepValue = function (obj, path) {
     for (var i = 0, pathParts = path.split('.'), len = pathParts.length; i < len; i++) {
         obj = obj[pathParts[i]];
     }
-    ;
     return obj;
 };
 exports.getHumanDate = function (time) {
@@ -16,8 +15,7 @@ exports.getHumanDate = function (time) {
     // Seconds part from the timestamp
     var seconds = "0" + date.getSeconds();
     // Will display time in 10:30:23 format
-    var formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
-    return formattedTime;
+    return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = exports.getDeepValue;

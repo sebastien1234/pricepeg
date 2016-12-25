@@ -6,13 +6,12 @@ var CurrencyConversion = (function () {
         this.fromCurrencyAmount = fromCurrencyAmount;
         this.toCurrencySymbol = toCurrencySymbol;
         this.toCurrencyLabel = toCurrencyLabel;
-        this.toCurrencyAmount = toCurrencyAmount;
         this.fromCurrencySymbol = fromCurrencySymbol;
         this.fromCurrencyLabel = fromCurrencyLabel;
         this.fromCurrencyAmount = fromCurrencyAmount;
         this.toCurrencySymbol = toCurrencySymbol;
         this.toCurrencyLabel = toCurrencyLabel;
-        this.toCurrencyAmount = toCurrencyAmount;
+        this.toCurrencyAmount = parseFloat(toCurrencyAmount);
     }
     return CurrencyConversion;
 }());

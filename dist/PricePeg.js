@@ -2,6 +2,7 @@
 var fs = require('fs');
 var Q = require('q');
 var config_1 = require("./config");
+var BittrexDataSource_1 = require("./data/BittrexDataSource");
 var PoloniexDataSource_1 = require("./data/PoloniexDataSource");
 var CoinbaseDataSource_1 = require("./data/CoinbaseDataSource");
 var FixerFiatDataSource_1 = require("./data/FixerFiatDataSource");
@@ -38,11 +39,11 @@ var PricePeg = (function () {
         this.updateInterval = null;
         this.fiatDataSource = new FixerFiatDataSource_1.default("USD", "US Dollar", "http://api.fixer.io/latest?base=USD");
         this.SYSBTCConversionCache = [
-            /*new BittrrexDataSource("SYS", "Syscoin", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS"),*/
+            new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS, "ZCash", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS", "result.Bid"),
             new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS, "Syscoin", "https://poloniex.com/public?command=returnTicker", "BTC_SYS.last")
         ];
         this.ZECBTCConversionCache = [
-            /*new BittrrexDataSource("SYS", "Syscoin", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS"),*/
+            new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC, "Zcash", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),
             new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC, "ZCash", "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")
         ];
         this.BTCFiatConversionCache = [
@@ -50,7 +51,7 @@ var PricePeg = (function () {
         ];
         this.start = function () {
             console.log("Starting PricePeg with config:", JSON.stringify(config_1.default));
-            if (!config_1.default.disableLiveCalls)
+            if (config_1.default.enableLivePegUpdates)
                 client.getInfo(function (err, info, resHeaders) {
                     if (err) {
                         console.log(err);
@@ -66,7 +67,7 @@ var PricePeg = (function () {
         };
         this.startUpdateInterval = function () {
             _this.fiatDataSource.fetchCurrencyConversionData().then(function (result) {
-                if (!config_1.default.debugUpdates) {
+                if (!config_1.default.enablePegUpdateDebug) {
                     _this.refreshCache(true);
                     _this.updateInterval = setInterval(function () {
                         _this.refreshCache(true);
@@ -76,7 +77,7 @@ var PricePeg = (function () {
                     _this.checkPricePeg();
                     _this.updateInterval = setInterval(function () {
                         _this.checkPricePeg();
-                    }, config_1.default.debugUpdatesInterval * 1000);
+                    }, config_1.default.debugPegUpdateInterval * 1000);
                 }
             });
         };
@@ -112,7 +113,7 @@ var PricePeg = (function () {
                 var newValue = _this.convertToPricePeg();
                 //console.log("NEW: ", JSON.stringify(newValue));
                 //console.log("OLD: ", JSON.stringify(currentValue));
-                if (config_1.default.debugUpdates) {
+                if (config_1.default.enablePegUpdateDebug) {
                     _this.setPricePeg(newValue, currentValue);
                 }
                 else {
@@ -141,7 +142,7 @@ var PricePeg = (function () {
         };
         this.getPricePeg = function () {
             var deferred = Q.defer();
-            if (config_1.default.disableLiveCalls) {
+            if (!config_1.default.enableLivePegUpdates) {
                 deferred.resolve(mockPeg);
             }
             else {
@@ -169,8 +170,8 @@ var PricePeg = (function () {
             updatesInThisPeriod += _this.updateHistory.filter(function (item) {
                 return item.date > currentIntervalStartTime;
             }).length;
-            if (updatesInThisPeriod <= config_1.default.maxUpdatesPerPeriod || config_1.default.debugUpdates) {
-                if (!config_1.default.disableLiveCalls) {
+            if (updatesInThisPeriod <= config_1.default.maxUpdatesPerPeriod) {
+                if (config_1.default.enableLivePegUpdates) {
                     client.aliasUpdate(config_1.default.pegalias, config_1.default.pegalias_aliaspeg, JSON.stringify(newValue), function (err, result, resHeaders) {
                         if (err) {
                             console.log(err);
@@ -216,9 +217,10 @@ var PricePeg = (function () {
                     convertedValue = convertedValue / _this.sysBTCConversionValue;
                     break;
             }
-            if (config_1.default.debugUpdates) {
+            //if debug is enabled artificially increment by config'd amount
+            if (config_1.default.enablePegUpdateDebug) {
                 console.log("Current this.sysRates ", JSON.stringify(_this.sysRates.rates));
-                convertedValue = _this.sysRates.rates[0].rate + config_1.default.debugUpdatesIncrement;
+                convertedValue = _this.sysRates.rates[0].rate + config_1.default.debugPegUpdateIncrement;
             }
             return convertedValue;
         };
@@ -293,8 +295,6 @@ var PricePeg = (function () {
         };
         this.getSYSZECAverage = function (amount) {
             if (amount === void 0) { amount = 1; }
-            if (!amount)
-                amount = 1;
             //first get the average across all the conversions
             var avgSum = 0;
             for (var i = 0; i < _this.ZECBTCConversionCache.length; i++) {
@@ -308,8 +308,6 @@ var PricePeg = (function () {
         };
         this.getBTCUSDAverage = function (amount) {
             if (amount === void 0) { amount = 1; }
-            if (!amount)
-                amount = 1;
             //first get the average across all the conversions
             var avgSum = 0;
             for (var i = 0; i < _this.BTCFiatConversionCache.length; i++) {
@@ -327,7 +325,7 @@ var PricePeg = (function () {
                 }
             });
         };
-        if (config_1.default.disableLiveCalls) {
+        if (!config_1.default.enableLivePegUpdates) {
             this.fiatDataSource.formattedCurrencyConversionData = mockPeg;
         }
     }

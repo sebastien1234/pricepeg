@@ -1,14 +1,13 @@
 export const config = {
-  maxUpdatesPerPeriod: 6, // maximum number of peg updates that will occur in a single period
-  updatePeriod: 60 * 60 * 1, //duration of a single period in seconds
+  maxUpdatesPerPeriod: 6, // maximum number of peg updates that will be allowed to occur in a single period
+  updatePeriod: 60 * 60 * 1, //defintion of the duration of a single period in seconds
   updateThresholdPercentage: 0.01, //percentage at which an update is attempted, if value of peg fluctuates +/- this range
-  updateVolatilityWarning: 100, //number of update attempts in a single period after which to alert admins to unusual volatility, possibly warranting temp config change
-  updateInterval: 10, //time in second to check for updates
+  updateInterval: 10, //time in second to check for price change updates
 
-  disableLiveCalls: false, //debug mode, disables live updates to peg on network
-  debugUpdates: false, //debug mode, enables debug mode which updates peg on set interval w fixed update rather than market rates
-  debugUpdatesInterval: 5, //debug mode, how frequently to update peg
-  debugUpdatesIncrement: 50, //debug mode, how much to increment USD conversion
+  enableLivePegUpdates: true, //debug mode, disables live updates to peg on network
+  enablePegUpdateDebug: false, //debug mode, enables debug mode which updates peg on set interval w fixed update rather than market rates
+  debugPegUpdateInterval: 5, //debug mode, how frequently to update peg
+  debugPegUpdateIncrement: 50, //debug mode, how much to increment USD conversion
 
   rpcserver: "localhost",
   rpcuser: "username",

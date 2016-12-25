@@ -6,7 +6,7 @@ import BittrrexDataSource from './data/BittrexDataSource';
 import PoloniexDataSource from './data/PoloniexDataSource';
 import CoinbaseDataSource from './data/CoinbaseDataSource';
 import FixerFiatDataSource from './data/FixerFiatDataSource';
-import {CurrencyConversionType} from './data/CurrencyConversion';
+import {CurrencyConversionType, default as CurrencyConversion} from './data/CurrencyConversion';
 const syscoin = require('syscoin');
 
 const client = new syscoin.Client({
@@ -45,12 +45,12 @@ export default class PricePeg {
   private fiatDataSource = new FixerFiatDataSource("USD", "US Dollar", "http://api.fixer.io/latest?base=USD");
 
   private SYSBTCConversionCache = [
-    /*new BittrrexDataSource("SYS", "Syscoin", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS"),*/
+    new BittrrexDataSource(CurrencyConversionType.CRYPTO.SYS, "ZCash", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS", "result.Bid"),
     new PoloniexDataSource(CurrencyConversionType.CRYPTO.SYS, "Syscoin", "https://poloniex.com/public?command=returnTicker", "BTC_SYS.last")
   ];
 
   private ZECBTCConversionCache = [
-    /*new BittrrexDataSource("SYS", "Syscoin", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS"),*/
+    new BittrrexDataSource(CurrencyConversionType.CRYPTO.ZEC, "Zcash", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),
     new PoloniexDataSource(CurrencyConversionType.CRYPTO.ZEC, "ZCash", "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")
   ];
 
@@ -59,7 +59,7 @@ export default class PricePeg {
   ];
 
   constructor() {
-    if (config.disableLiveCalls) {
+    if (!config.enableLivePegUpdates) {
       this.fiatDataSource.formattedCurrencyConversionData = mockPeg;
     }
   }
@@ -67,7 +67,7 @@ export default class PricePeg {
   start = () => {
     console.log("Starting PricePeg with config:", JSON.stringify(config));
 
-    if(!config.disableLiveCalls)
+    if(config.enableLivePegUpdates)
       client.getInfo((err, info, resHeaders) => {
         if (err) {
           console.log(err);
@@ -86,7 +86,7 @@ export default class PricePeg {
 
   startUpdateInterval = () => {
     this.fiatDataSource.fetchCurrencyConversionData().then((result) => {
-      if (!config.debugUpdates) {
+      if (!config.enablePegUpdateDebug) {
         this.refreshCache(true);
 
         this.updateInterval = setInterval(() => {
@@ -97,7 +97,7 @@ export default class PricePeg {
 
         this.updateInterval = setInterval(() => {
           this.checkPricePeg();
-        }, config.debugUpdatesInterval * 1000);
+        }, config.debugPegUpdateInterval * 1000);
       }
     });
   };
@@ -145,7 +145,7 @@ export default class PricePeg {
       //console.log("NEW: ", JSON.stringify(newValue));
       //console.log("OLD: ", JSON.stringify(currentValue));
 
-      if(config.debugUpdates) {
+      if(config.enablePegUpdateDebug) {
         this.setPricePeg(newValue, currentValue);
       }else{
         let percentChange = 0;
@@ -180,7 +180,7 @@ export default class PricePeg {
   getPricePeg = () => {
     let deferred = Q.defer();
 
-    if(config.disableLiveCalls) {
+    if(!config.enableLivePegUpdates) {
       deferred.resolve(mockPeg);
     }else{
       client.aliasInfo(config.pegalias, (err, aliasinfo, resHeaders) => {
@@ -214,8 +214,8 @@ export default class PricePeg {
       return item.date > currentIntervalStartTime;
     }).length;
 
-    if (updatesInThisPeriod <= config.maxUpdatesPerPeriod || config.debugUpdates) {
-      if(!config.disableLiveCalls) {
+    if (updatesInThisPeriod <= config.maxUpdatesPerPeriod) {
+      if(config.enableLivePegUpdates) {
         client.aliasUpdate(config.pegalias, config.pegalias_aliaspeg, JSON.stringify(newValue), (err, result, resHeaders) => {
           if (err) {
             console.log(err);
@@ -267,9 +267,10 @@ export default class PricePeg {
         break;
     }
 
-    if (config.debugUpdates) {
+    //if debug is enabled artificially increment by config'd amount
+    if (config.enablePegUpdateDebug) {
       console.log("Current this.sysRates ", JSON.stringify(this.sysRates.rates));
-      convertedValue = this.sysRates.rates[0].rate + config.debugUpdatesIncrement;
+      convertedValue = this.sysRates.rates[0].rate + config.debugPegUpdateIncrement;
     }
 
     return convertedValue;
@@ -350,9 +351,6 @@ export default class PricePeg {
   };
 
   getSYSZECAverage = (amount: number = 1) => {
-    if (!amount)
-      amount = 1;
-
     //first get the average across all the conversions
     let avgSum = 0;
 
@@ -371,9 +369,6 @@ export default class PricePeg {
   };
 
   getBTCUSDAverage = (amount: number = 1) => {
-    if (!amount)
-      amount = 1;
-
     //first get the average across all the conversions
     let avgSum = 0;
 

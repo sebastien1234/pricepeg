@@ -52,7 +52,7 @@ export default class BaseConversionDataSource {
     this.rawCurrencyConversionData = response;
     this.lastSuccessfulFetchTime = Date.now();
 
-    //console.log(this.dataUrl + " returned: " + JSON.stringify(this.rawCurrencyConversionData));
+    console.log(this.dataUrl + " returned!");
 
     this.formatCurrencyConversionData(this.rawCurrencyConversionData);
   };

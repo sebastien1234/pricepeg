@@ -17,6 +17,10 @@ const client = new syscoin.Client({
   timeout: config.rpctimeout
 });
 
+interface PricePegModel {
+  rates: PricePegEntry[];
+}
+
 interface PricePegEntry {
  currency: string;
  rate: number; // how many SYS equal 1 of this currency
@@ -26,7 +30,7 @@ interface PricePegEntry {
 }
 
 //holds mock peg data for sync testing
-const mockPeg = {
+const mockPeg: PricePegModel = {
   "rates": [
     {"currency": "USD", "rate": 0.5, "escrowfee": 0.005, "precision": 2},
     {"currency": "EUR", "rate": 2695.2, "escrowfee": 0.005, "precision": 2},
@@ -74,10 +78,6 @@ export default class PricePeg {
     this.fiatDataSource.formattedCurrencyConversionData = mockPeg;
   }
 
-  constructor() {
-  }
-
-
   start = () => {
     console.log("Starting PricePeg with config:", JSON.stringify(config));
 
@@ -121,59 +121,27 @@ export default class PricePeg {
   };
 
   refreshCache = (checkForPegUpdate) => {
-    this.refreshAltsConversionCache(checkForPegUpdate);
-    this.refreshBTCConversionCache(checkForPegUpdate);
+    let dataSources = this.SYSBTCConversionCache.concat(this.ZECBTCConversionCache.concat(this.BTCFiatConversionCache));
+    dataSources.map(item => { return item.fetchCurrencyConversionData() });
+    Q.all(dataSources).then((resultsArr) => {
+      this.handleCacheRefreshComplete(checkForPegUpdate);
+    });
   };
 
-  refreshAltsConversionCache = (checkForPegUpdate) => {
-    let cache = this.SYSBTCConversionCache.concat(this.ZECBTCConversionCache);
-    for(let i = 0; i < cache.length; i++) {
-      cache[i].fetchCurrencyConversionData().then((result) => {
-        this.isCacheRefreshComplete(checkForPegUpdate);
-      });
-    }
-  };
+  handleCacheRefreshComplete = (checkForPegUpdate) => {
+    //any time we fetch crypto rates, fetch the fiat rates too
+    this.fiatDataSource.fetchCurrencyConversionData().then((result) => {
 
-  refreshBTCConversionCache = (checkForPegUpdate) => {
-    for (let i = 0; i < this.BTCFiatConversionCache.length; i++) {
-      this.BTCFiatConversionCache[i].fetchCurrencyConversionData().then((result) => {
-        this.isCacheRefreshComplete(checkForPegUpdate);
-      });
-    }
-  };
+      this.sysBTCConversionValue = this.getSYSBTCAverage();
+      this.sysZECConversionValue = this.getSYSZECAverage();
+      this.btcUSDConversionValue = this.getBTCUSDAverage();
 
-  isCacheRefreshComplete = (checkForPegUpdate) => {
-    let allComplete = true;
-    let cache = this.SYSBTCConversionCache.concat(this.ZECBTCConversionCache);
-    for (let i = 0; i < cache.length; i++) {
-      if (cache[i].pendingRequest) {
-        allComplete = false;
+      this.getSYSFiatValue(CurrencyConversionType.FIAT.USD);
+
+      if (checkForPegUpdate) {
+        this.checkPricePeg();
       }
-    }
-
-    if (allComplete) {
-      for (let i = 0; i < this.BTCFiatConversionCache.length; i++) {
-        if (this.BTCFiatConversionCache[i].pendingRequest) {
-          allComplete = false;
-        }
-      }
-    }
-
-    if (allComplete) {
-      //any time we fetch crypto rates, fetch the fiat rates too
-      this.fiatDataSource.fetchCurrencyConversionData().then((result) => {
-
-        this.sysBTCConversionValue = this.getSYSBTCAverage();
-        this.sysZECConversionValue = this.getSYSZECAverage();
-        this.btcUSDConversionValue = this.getBTCUSDAverage();
-
-        this.getSYSFiatValue(CurrencyConversionType.FIAT.USD);
-
-        if (checkForPegUpdate) {
-          this.checkPricePeg();
-        }
-      });
-    }
+    });
   };
 
   checkPricePeg = () => {
@@ -432,10 +400,6 @@ export default class PricePeg {
     return avgVal * amount;
   };
 
-  lookupBTCFiatConversion = (fiatType) => {
-    //return the BTC conversion for a specific type of fiat, will support multiple
-  };
-
   logPegMessage = (msg) => {
     msg = new Date() + " - " + msg;
     console.log(msg);
@@ -445,20 +409,4 @@ export default class PricePeg {
       }
     });
   };
-
-  getHumanDate = (time) => {
-    // Create a new JavaScript Date object based on the timestamp
-    let date = new Date(time);
-    // Hours part from the timestamp
-    let hours = date.getHours();
-    // Minutes part from the timestamp
-    let minutes = "0" + date.getMinutes();
-    // Seconds part from the timestamp
-    let seconds = "0" + date.getSeconds();
-
-    // Will display time in 10:30:23 format
-    let formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
-
-    return formattedTime;
-  }
 };

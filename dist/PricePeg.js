@@ -85,51 +85,23 @@ var PricePeg = (function () {
             clearInterval(_this.updateInterval);
         };
         this.refreshCache = function (checkForPegUpdate) {
-            _this.refreshAltsConversionCache(checkForPegUpdate);
-            _this.refreshBTCConversionCache(checkForPegUpdate);
+            var dataSources = _this.SYSBTCConversionCache.concat(_this.ZECBTCConversionCache.concat(_this.BTCFiatConversionCache));
+            dataSources.map(function (item) { return item.fetchCurrencyConversionData(); });
+            Q.all(dataSources).then(function (resultsArr) {
+                _this.handleCacheRefreshComplete(checkForPegUpdate);
+            });
         };
-        this.refreshAltsConversionCache = function (checkForPegUpdate) {
-            var cache = _this.SYSBTCConversionCache.concat(_this.ZECBTCConversionCache);
-            for (var i = 0; i < cache.length; i++) {
-                cache[i].fetchCurrencyConversionData().then(function (result) {
-                    _this.isCacheRefreshComplete(checkForPegUpdate);
-                });
-            }
-        };
-        this.refreshBTCConversionCache = function (checkForPegUpdate) {
-            for (var i = 0; i < _this.BTCFiatConversionCache.length; i++) {
-                _this.BTCFiatConversionCache[i].fetchCurrencyConversionData().then(function (result) {
-                    _this.isCacheRefreshComplete(checkForPegUpdate);
-                });
-            }
-        };
-        this.isCacheRefreshComplete = function (checkForPegUpdate) {
-            var allComplete = true;
-            var cache = _this.SYSBTCConversionCache.concat(_this.ZECBTCConversionCache);
-            for (var i = 0; i < cache.length; i++) {
-                if (cache[i].pendingRequest) {
-                    allComplete = false;
+        this.handleCacheRefreshComplete = function (checkForPegUpdate) {
+            //any time we fetch crypto rates, fetch the fiat rates too
+            _this.fiatDataSource.fetchCurrencyConversionData().then(function (result) {
+                _this.sysBTCConversionValue = _this.getSYSBTCAverage();
+                _this.sysZECConversionValue = _this.getSYSZECAverage();
+                _this.btcUSDConversionValue = _this.getBTCUSDAverage();
+                _this.getSYSFiatValue(CurrencyConversion_1.CurrencyConversionType.FIAT.USD);
+                if (checkForPegUpdate) {
+                    _this.checkPricePeg();
                 }
-            }
-            if (allComplete) {
-                for (var i = 0; i < _this.BTCFiatConversionCache.length; i++) {
-                    if (_this.BTCFiatConversionCache[i].pendingRequest) {
-                        allComplete = false;
-                    }
-                }
-            }
-            if (allComplete) {
-                //any time we fetch crypto rates, fetch the fiat rates too
-                _this.fiatDataSource.fetchCurrencyConversionData().then(function (result) {
-                    _this.sysBTCConversionValue = _this.getSYSBTCAverage();
-                    _this.sysZECConversionValue = _this.getSYSZECAverage();
-                    _this.btcUSDConversionValue = _this.getBTCUSDAverage();
-                    _this.getSYSFiatValue(CurrencyConversion_1.CurrencyConversionType.FIAT.USD);
-                    if (checkForPegUpdate) {
-                        _this.checkPricePeg();
-                    }
-                });
-            }
+            });
         };
         this.checkPricePeg = function () {
             var deferred = Q.defer();
@@ -347,9 +319,6 @@ var PricePeg = (function () {
             var avgVal = avgSum / _this.BTCFiatConversionCache.length;
             return avgVal * amount;
         };
-        this.lookupBTCFiatConversion = function (fiatType) {
-            //return the BTC conversion for a specific type of fiat, will support multiple
-        };
         this.logPegMessage = function (msg) {
             msg = new Date() + " - " + msg;
             console.log(msg);
@@ -358,19 +327,6 @@ var PricePeg = (function () {
                     return console.log(err);
                 }
             });
-        };
-        this.getHumanDate = function (time) {
-            // Create a new JavaScript Date object based on the timestamp
-            var date = new Date(time);
-            // Hours part from the timestamp
-            var hours = date.getHours();
-            // Minutes part from the timestamp
-            var minutes = "0" + date.getMinutes();
-            // Seconds part from the timestamp
-            var seconds = "0" + date.getSeconds();
-            // Will display time in 10:30:23 format
-            var formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
-            return formattedTime;
         };
     }
     PricePeg.prototype.if = function (disableLiveCalls) {

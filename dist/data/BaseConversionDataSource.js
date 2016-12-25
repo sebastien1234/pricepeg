@@ -40,7 +40,7 @@ var BaseConversionDataSource = (function () {
         this.handleFetchCurrencyConversionData = function (response) {
             _this.rawCurrencyConversionData = response;
             _this.lastSuccessfulFetchTime = Date.now();
-            //console.log(this.dataUrl + " returned: " + JSON.stringify(this.rawCurrencyConversionData));
+            console.log(_this.dataUrl + " returned!");
             _this.formatCurrencyConversionData(_this.rawCurrencyConversionData);
         };
         this.dataUrl = dataUrl;

@@ -10,7 +10,6 @@
     },
     "exclude": [
         "node_modules",
-        "src/test",
         "dist",
         "gulp.config.js",
         "gulpfile.js"

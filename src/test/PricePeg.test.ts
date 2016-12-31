@@ -1,9 +1,11 @@
-var sinon = require('sinon');
-var when = require('when');
-var assert = require('assert');
+let sinon = require('sinon');
+let when = require('when');
+let assert = require('assert');
+let rewire = require('rewire');
 
-var rp = require('request-promise');
-var PricePeg = rewire('../PricePeg');
+let rp = require('request-promise');
+let PricePeg = rewire('../PricePeg');
+let BaseConversionDataSource = rewire('../data/BaseConversionDataSource');
 
 describe('fetchCurrencyConversionData', function () {
 
@@ -18,8 +20,8 @@ describe('fetchCurrencyConversionData', function () {
   });
 
   it('Should call the dataURL and base callback', function (done) {
-    var conversionDataSource = new BaseConversionDataSource("TSYS", "Test", "http://test2.com");
-    var handlerSpy = sinon.spy(conversionDataSource, "formatCurrencyConversionData");
+    let conversionDataSource = new BaseConversionDataSource("TSYS", "Test", "http://test2.com");
+    let handlerSpy = sinon.spy(conversionDataSource, "formatCurrencyConversionData");
 
     conversionDataSource.fetchCurrencyConversionData().then(function () {
       sinon.assert.calledOnce(handlerSpy);

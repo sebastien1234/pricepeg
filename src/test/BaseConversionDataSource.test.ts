@@ -1,10 +1,28 @@
-var sinon = require('sinon');
-var rewire = require('rewire');
-var when = require('when');
-var assert = require('assert');
+import sinon = require("sinon");
+import rewire = require('rewire');
+import when = require('when');
+import assert = require('assert');
+import rp  = require('request-promise');
 
-var rp = require('request-promise');
-var BaseConversionDataSource = rewire('../data/BaseConversionDataSource');
+let RewiredComponent = rewire('../data/BaseConversionDataSource');
+let defaultComponentMock = {};
+
+
+// let defaultMock = { /* Make a mock of your dependency */ };
+// RewiredComponent.__set__('other_component_1', {
+//   default: defaultComponentMock
+// });
+//
+// let individuallyExportedMock = { /* Make a mock of your dependency */ };
+// RewiredComponent.__set__('yet_another_component_1', {
+//   IndividuallyExportedComponent: individuallyExportedMock
+// });
+
+// RewiredComponent has the wrong type now. YMMV, but I'm doing type-wrangling
+// that looks something like:
+
+import BaseConversionDataSource from "../data/BaseConversionDataSource";
+let Component: typeof BaseConversionDataSource & typeof RewiredComponent = <any> RewiredComponent;
 
 describe('fetchCurrencyConversionData', function () {
 
@@ -19,8 +37,8 @@ describe('fetchCurrencyConversionData', function () {
   });
 
   it('Should call the dataURL and base callback', function (done) {
-    var conversionDataSource = new BaseConversionDataSource("TSYS", "Test", "http://test2.com");
-    var handlerSpy = sinon.spy(conversionDataSource, "formatCurrencyConversionData");
+    let conversionDataSource = new Component("TSYS", "Test", "http://test2.com");
+    let handlerSpy = sinon.spy(conversionDataSource, "formatCurrencyConversionData");
 
     conversionDataSource.fetchCurrencyConversionData().then(function () {
       sinon.assert.calledOnce(handlerSpy);
@@ -33,26 +51,12 @@ describe('fetchCurrencyConversionData', function () {
     });
   });
 
-  it('Should properly manage the pendingRequest flag', function (done) {
-    var conversionDataSource = new BaseConversionDataSource("TSYS", "Test", "http://test2.com");
-
-    assert.equal(conversionDataSource.pendingRequest, false);
-
-    conversionDataSource.fetchCurrencyConversionData().then(function () {
-      assert.equal(conversionDataSource.pendingRequest, false);
-
-      done();
-    });
-
-    assert.equal(conversionDataSource.pendingRequest, true);
-  });
-
   it('Should properly manage lastFetchAttemptTime and lastSuccessfulFetchTime', function (done) {
-    var conversionDataSource = new BaseConversionDataSource("TSYS", "Test", "http://test2.com");
+    let conversionDataSource = new Component("TSYS", "Test", "http://test2.com");
 
     //store times before fetch
-    var prevAttemptTime = conversionDataSource.lastFetchAttemptTime;
-    var prevSuccessTime = conversionDataSource.lastSuccessfulFetchTime;
+    let prevAttemptTime = conversionDataSource.lastFetchAttemptTime;
+    let prevSuccessTime = conversionDataSource.lastSuccessfulFetchTime;
 
     conversionDataSource.fetchCurrencyConversionData().then(function () {
       assert(conversionDataSource.lastSuccessfulFetchTime > prevSuccessTime, "Properly set last success time");
@@ -77,7 +81,7 @@ describe('rawCurrencyConversionData', function () {
   });
 
   it('Should store the raw data response', function (done) {
-    var conversionDataSource = new BaseConversionDataSource("TSYS", "Test", "http://test2.com");
+    let conversionDataSource = new Component("TSYS", "Test", "http://test2.com");
 
     conversionDataSource.fetchCurrencyConversionData().then(function () {
       assert.equal(conversionDataSource.rawCurrencyConversionData, "hello");
@@ -85,4 +89,4 @@ describe('rawCurrencyConversionData', function () {
     });
   });
 
-})
+});

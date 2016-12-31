@@ -4,7 +4,8 @@
   "description": "Maintains SYS price peg against a variety of currencies",
   "main": "dist/server.js",
   "scripts": {
-    "build": "rm -rf dist && tsc && cp -R ./src/static/ ./dist/static"
+    "build": "rm -rf dist && tsc && cp -R ./src/static/ ./dist/static",
+    "server": "screen nodejs dist/server.js"
   },
   "repository": {
     "type": "git",

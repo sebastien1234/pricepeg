@@ -1,4 +1,4 @@
-const fs = require('fs');
+import {logPegMessage, logPegMessageNewline} from "./data/Utils";
 const Q = require('q');
 
 import config from './config';
@@ -65,15 +65,14 @@ export default class PricePeg {
   }
 
   start = () => {
-    console.log("Starting PricePeg with config:", JSON.stringify(config));
+    logPegMessage("Starting PricePeg with config: \n" + JSON.stringify(config));
 
     if(config.enableLivePegUpdates)
       client.getInfo((err, info, resHeaders) => {
         if (err) {
-          console.log(err);
-          return this.logPegMessage("Error: " + err);
+          return logPegMessage("Error: " + err);
         }
-        console.log('Syscoin Connection Test. Current Blockheight: ', info.blocks);
+        logPegMessage('Syscoin Connection Test. Current Blockheight: ' + info.blocks);
       });
 
     this.startTime = Date.now();
@@ -108,7 +107,8 @@ export default class PricePeg {
 
   refreshCache = (checkForPegUpdate) => {
     let dataSources = this.SYSBTCConversionCache.concat(this.ZECBTCConversionCache.concat(this.BTCFiatConversionCache));
-    dataSources.map(item => { return item.fetchCurrencyConversionData() });
+    dataSources = dataSources.map(item => { return item.fetchCurrencyConversionData() });
+
     Q.all(dataSources).then((resultsArr) => {
       this.handleCacheRefreshComplete(checkForPegUpdate);
     });
@@ -116,6 +116,9 @@ export default class PricePeg {
 
   handleCacheRefreshComplete = (checkForPegUpdate) => {
     //any time we fetch crypto rates, fetch the fiat rates too
+    logPegMessage("Cache refresh completed, check for peg value changes == " + checkForPegUpdate);
+    logPegMessageNewline();
+
     this.fiatDataSource.fetchCurrencyConversionData().then((result) => {
 
       this.sysBTCConversionValue = this.getSYSBTCAverage();
@@ -134,16 +137,15 @@ export default class PricePeg {
     let deferred = Q.defer();
 
     this.getPricePeg().then((currentValue) => {
-
+      logPegMessage("Current peg value: " + JSON.stringify(currentValue));
       if (this.sysRates == null) {
-        console.log("No current value set, setting:" + JSON.stringify(currentValue));
+        logPegMessage("No current value set, setting, setting first result as current value.");
         this.sysRates = currentValue;
       }
 
-      let newValue = this.convertToPricePeg();
+      logPegMessageNewline();
 
-      //console.log("NEW: ", JSON.stringify(newValue));
-      //console.log("OLD: ", JSON.stringify(currentValue));
+      let newValue = this.convertToPricePeg();
 
       if(config.enablePegUpdateDebug) {
         this.setPricePeg(newValue, currentValue);
@@ -153,12 +155,13 @@ export default class PricePeg {
           percentChange = ((newValue.rates[0].rate - currentValue.rates[0].rate) / currentValue.rates[0].rate) * 100;
         }
 
-        this.logPegMessage("Checking price. Current v. new = " + currentValue.rates[0].rate + " v. " + newValue.rates[0].rate + " == " + percentChange + "% change");
+        logPegMessage("Checking price. Current v. new = " + currentValue.rates[0].rate + " v. " + newValue.rates[0].rate + " == " + percentChange + "% change");
+        logPegMessageNewline();
 
         percentChange = percentChange < 0 ? percentChange * -1 : percentChange; //convert neg percent to positive
 
         if (percentChange > (config.updateThresholdPercentage * 100)) {
-          this.logPegMessage("Attempting to update price peg.");
+          logPegMessage("Attempting to update price peg.");
           this.setPricePeg(newValue, currentValue).then((result) => {
             deferred.resolve(result);
           });
@@ -170,7 +173,7 @@ export default class PricePeg {
     })
 
     .catch((err) => {
-      console.log("ERROR:" + err);
+      logPegMessage("ERROR:" + err);
       deferred.reject(err);
     });
 
@@ -185,8 +188,7 @@ export default class PricePeg {
     }else{
       client.aliasInfo(config.pegalias, (err, aliasinfo, resHeaders) => {
         if (err) {
-          console.log(err);
-          this.logPegMessage("Error: " + err);
+          logPegMessage("Error: " + err);
           return deferred.reject(err);
         }
 
@@ -209,7 +211,7 @@ export default class PricePeg {
     let currentIntervalStartTime = now - ((config.updatePeriod * 1000) * currentInterval);
 
     let updatesInThisPeriod = 0;
-    console.log("trying to set");
+    logPegMessage("Attempting to update price peg if within safe parameters.");
     updatesInThisPeriod += this.updateHistory.filter((item) => {
       return item.date > currentIntervalStartTime;
     }).length;
@@ -218,11 +220,11 @@ export default class PricePeg {
       if(config.enableLivePegUpdates) {
         client.aliasUpdate(config.pegalias, config.pegalias_aliaspeg, JSON.stringify(newValue), (err, result, resHeaders) => {
           if (err) {
-            console.log(err);
-            this.logPegMessage("Error:" + err);
+            logPegMessage("ERROR:" + err);
+            logPegMessageNewline();
             deferred.reject(err);
           } else {
-            this.logUpdate(newValue, oldValue); //always story the pre-update value so it makes sense when displayed
+            this.logUpdate(newValue, oldValue); //always store the pre-update value so it makes sense when displayed
             deferred.resolve(result);
           }
         });
@@ -231,7 +233,8 @@ export default class PricePeg {
         deferred.resolve(newValue);
       }
     } else {
-      this.logPegMessage("ERROR - Unable to update peg, max updates of [" + config.maxUpdatesPerPeriod + "] would be exceeded. Not updating peg.");
+      logPegMessage("ERROR - Unable to update peg, max updates of [" + config.maxUpdatesPerPeriod + "] would be exceeded. Not updating peg.");
+      logPegMessageNewline();
       deferred.reject();
     }
 
@@ -247,7 +250,8 @@ export default class PricePeg {
 
     this.sysRates = newValue;
 
-    this.logPegMessage("Price peg updated successfully.");
+    logPegMessage("Price peg updated successfully.");
+    logPegMessageNewline();
   };
 
   getFiatRate = (usdRate, conversionRate, precision) => {
@@ -269,7 +273,6 @@ export default class PricePeg {
 
     //if debug is enabled artificially increment by config'd amount
     if (config.enablePegUpdateDebug) {
-      console.log("Current this.sysRates ", JSON.stringify(this.sysRates.rates));
       convertedValue = this.sysRates.rates[0].rate + config.debugPegUpdateIncrement;
     }
 
@@ -363,8 +366,6 @@ export default class PricePeg {
 
     let avgVal = avgZECVal / avgSYSVal;
 
-    console.log("ZEC:", avgZECVal + " n " + avgSYSVal);
-
     return avgVal * amount;
   };
 
@@ -379,16 +380,6 @@ export default class PricePeg {
     let avgVal = avgSum / this.BTCFiatConversionCache.length;
 
     return avgVal * amount;
-  };
-
-  logPegMessage = (msg) => {
-    msg = new Date() + " - " + msg;
-    console.log(msg);
-    fs.appendFile("./peg.log", msg + "\n", function (err) {
-      if (err) {
-        return console.log(err);
-      }
-    });
   };
 };
 

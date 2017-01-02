@@ -1,4 +1,5 @@
 "use strict";
+var Utils_1 = require("./Utils");
 var rp = require('request-promise');
 var Q = require('q');
 var BaseConversionDataSource = (function () {
@@ -13,7 +14,7 @@ var BaseConversionDataSource = (function () {
         this.lastSuccessfulFetchTime = 0;
         this.formatCurrencyConversionData = function (rawCurrencyResponseData) {
             //convert the raw currency conversion data to a standard format, may differ by datasource
-            console.log("Handling response in base data source handler.");
+            Utils_1.logPegMessage("Handling response in base data source handler.");
             return null; //this should be overridden!
         };
         this.fetchCurrencyConversionData = function () {
@@ -28,7 +29,7 @@ var BaseConversionDataSource = (function () {
                 deferred.resolve();
             })
                 .catch(function (err) {
-                console.log("Error requesting data.", err);
+                Utils_1.logPegMessage("Error requesting data." + JSON.stringify(err));
                 deferred.reject(err);
             });
             return deferred.promise;
@@ -36,7 +37,7 @@ var BaseConversionDataSource = (function () {
         this.handleFetchCurrencyConversionData = function (response) {
             _this.rawCurrencyConversionData = response;
             _this.lastSuccessfulFetchTime = Date.now();
-            console.log(_this.dataUrl + " returned!");
+            Utils_1.logPegMessage(_this.dataUrl + " returned!");
             _this.formatCurrencyConversionData(_this.rawCurrencyConversionData);
         };
         this.dataUrl = dataUrl;
@@ -48,4 +49,3 @@ var BaseConversionDataSource = (function () {
 }());
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = BaseConversionDataSource;
-//# sourceMappingURL=BaseConversionDataSource.js.map

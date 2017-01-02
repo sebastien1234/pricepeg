@@ -21,4 +21,3 @@ var CoinbaseDataSource = (function (_super) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = CoinbaseDataSource;
 ;
-//# sourceMappingURL=CoinbaseDataSource.js.map

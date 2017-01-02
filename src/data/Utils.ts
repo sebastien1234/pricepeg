@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+
 export const getDeepValue = (obj: any, path:string) => {
   for (let i=0, pathParts=path.split('.'), len=pathParts.length; i<len; i++){
     obj = obj[pathParts[i]];
@@ -18,6 +20,32 @@ export const getHumanDate = (time: number): string => {
 
   // Will display time in 10:30:23 format
   return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+};
+
+export const logPegMessage = (msg, includeTimeStamp: boolean = true) => {
+  msg = includeTimeStamp ? new Date() + " - " + msg  : msg;
+  console.log(msg);
+  writeToFile("./peg.log", msg + "\n");
+};
+
+export const writeToFile = (filePath: string, content: string, append: boolean = true) => {
+  if(append) {
+    fs.appendFile(filePath, content, function (err) {
+      if (err) {
+        return console.log("ERROR APPENDING TO PEG LOG: ", JSON.stringify(err));
+      }
+    });
+  }else{
+    fs.writeFile(filePath, content, function (err) {
+      if (err) {
+        return console.log("ERROR WRITING TO PEG LOG: ", JSON.stringify(err));
+      }
+    });
+  }
+};
+
+export const logPegMessageNewline = () => {
+  this.logPegMessage("", false);
 };
 
 export default getDeepValue;

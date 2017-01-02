@@ -1,5 +1,5 @@
 "use strict";
-var fs = require('fs');
+var Utils_1 = require("./data/Utils");
 var Q = require('q');
 var config_1 = require("./config");
 var BittrexDataSource_1 = require("./data/BittrexDataSource");
@@ -50,14 +50,13 @@ var PricePeg = (function () {
             new CoinbaseDataSource_1.default("USD", "US Dollar", "https://coinbase.com/api/v1/currencies/exchange_rates")
         ];
         this.start = function () {
-            console.log("Starting PricePeg with config:", JSON.stringify(config_1.default));
+            Utils_1.logPegMessage("Starting PricePeg with config: \n" + JSON.stringify(config_1.default));
             if (config_1.default.enableLivePegUpdates)
                 client.getInfo(function (err, info, resHeaders) {
                     if (err) {
-                        console.log(err);
-                        return _this.logPegMessage("Error: " + err);
+                        return Utils_1.logPegMessage("Error: " + err);
                     }
-                    console.log('Syscoin Connection Test. Current Blockheight: ', info.blocks);
+                    Utils_1.logPegMessage('Syscoin Connection Test. Current Blockheight: ' + info.blocks);
                 });
             _this.startTime = Date.now();
             _this.startUpdateInterval();
@@ -86,13 +85,15 @@ var PricePeg = (function () {
         };
         this.refreshCache = function (checkForPegUpdate) {
             var dataSources = _this.SYSBTCConversionCache.concat(_this.ZECBTCConversionCache.concat(_this.BTCFiatConversionCache));
-            dataSources.map(function (item) { return item.fetchCurrencyConversionData(); });
+            dataSources = dataSources.map(function (item) { return item.fetchCurrencyConversionData(); });
             Q.all(dataSources).then(function (resultsArr) {
                 _this.handleCacheRefreshComplete(checkForPegUpdate);
             });
         };
         this.handleCacheRefreshComplete = function (checkForPegUpdate) {
             //any time we fetch crypto rates, fetch the fiat rates too
+            Utils_1.logPegMessage("Cache refresh completed, check for peg value changes == " + checkForPegUpdate);
+            Utils_1.logPegMessageNewline();
             _this.fiatDataSource.fetchCurrencyConversionData().then(function (result) {
                 _this.sysBTCConversionValue = _this.getSYSBTCAverage();
                 _this.sysZECConversionValue = _this.getSYSZECAverage();
@@ -106,13 +107,13 @@ var PricePeg = (function () {
         this.checkPricePeg = function () {
             var deferred = Q.defer();
             _this.getPricePeg().then(function (currentValue) {
+                Utils_1.logPegMessage("Current peg value: " + JSON.stringify(currentValue));
                 if (_this.sysRates == null) {
-                    console.log("No current value set, setting:" + JSON.stringify(currentValue));
+                    Utils_1.logPegMessage("No current value set, setting, setting first result as current value.");
                     _this.sysRates = currentValue;
                 }
+                Utils_1.logPegMessageNewline();
                 var newValue = _this.convertToPricePeg();
-                //console.log("NEW: ", JSON.stringify(newValue));
-                //console.log("OLD: ", JSON.stringify(currentValue));
                 if (config_1.default.enablePegUpdateDebug) {
                     _this.setPricePeg(newValue, currentValue);
                 }
@@ -121,10 +122,11 @@ var PricePeg = (function () {
                     if (newValue.rates[0].rate != currentValue.rates[0].rate) {
                         percentChange = ((newValue.rates[0].rate - currentValue.rates[0].rate) / currentValue.rates[0].rate) * 100;
                     }
-                    _this.logPegMessage("Checking price. Current v. new = " + currentValue.rates[0].rate + " v. " + newValue.rates[0].rate + " == " + percentChange + "% change");
+                    Utils_1.logPegMessage("Checking price. Current v. new = " + currentValue.rates[0].rate + " v. " + newValue.rates[0].rate + " == " + percentChange + "% change");
+                    Utils_1.logPegMessageNewline();
                     percentChange = percentChange < 0 ? percentChange * -1 : percentChange; //convert neg percent to positive
                     if (percentChange > (config_1.default.updateThresholdPercentage * 100)) {
-                        _this.logPegMessage("Attempting to update price peg.");
+                        Utils_1.logPegMessage("Attempting to update price peg.");
                         _this.setPricePeg(newValue, currentValue).then(function (result) {
                             deferred.resolve(result);
                         });
@@ -135,7 +137,7 @@ var PricePeg = (function () {
                 }
             })
                 .catch(function (err) {
-                console.log("ERROR:" + err);
+                Utils_1.logPegMessage("ERROR:" + err);
                 deferred.reject(err);
             });
             return deferred.promise;
@@ -148,8 +150,7 @@ var PricePeg = (function () {
             else {
                 client.aliasInfo(config_1.default.pegalias, function (err, aliasinfo, resHeaders) {
                     if (err) {
-                        console.log(err);
-                        _this.logPegMessage("Error: " + err);
+                        Utils_1.logPegMessage("Error: " + err);
                         return deferred.reject(err);
                     }
                     deferred.resolve(JSON.parse(aliasinfo.value));
@@ -166,7 +167,7 @@ var PricePeg = (function () {
             //see how many updates have happened in this period
             var currentIntervalStartTime = now - ((config_1.default.updatePeriod * 1000) * currentInterval);
             var updatesInThisPeriod = 0;
-            console.log("trying to set");
+            Utils_1.logPegMessage("Attempting to update price peg if within safe parameters.");
             updatesInThisPeriod += _this.updateHistory.filter(function (item) {
                 return item.date > currentIntervalStartTime;
             }).length;
@@ -174,12 +175,12 @@ var PricePeg = (function () {
                 if (config_1.default.enableLivePegUpdates) {
                     client.aliasUpdate(config_1.default.pegalias, config_1.default.pegalias_aliaspeg, JSON.stringify(newValue), function (err, result, resHeaders) {
                         if (err) {
-                            console.log(err);
-                            _this.logPegMessage("Error:" + err);
+                            Utils_1.logPegMessage("ERROR:" + err);
+                            Utils_1.logPegMessageNewline();
                             deferred.reject(err);
                         }
                         else {
-                            _this.logUpdate(newValue, oldValue); //always story the pre-update value so it makes sense when displayed
+                            _this.logUpdate(newValue, oldValue); //always store the pre-update value so it makes sense when displayed
                             deferred.resolve(result);
                         }
                     });
@@ -190,7 +191,8 @@ var PricePeg = (function () {
                 }
             }
             else {
-                _this.logPegMessage("ERROR - Unable to update peg, max updates of [" + config_1.default.maxUpdatesPerPeriod + "] would be exceeded. Not updating peg.");
+                Utils_1.logPegMessage("ERROR - Unable to update peg, max updates of [" + config_1.default.maxUpdatesPerPeriod + "] would be exceeded. Not updating peg.");
+                Utils_1.logPegMessageNewline();
                 deferred.reject();
             }
             return deferred.promise;
@@ -202,7 +204,8 @@ var PricePeg = (function () {
                 value: oldValue
             });
             _this.sysRates = newValue;
-            _this.logPegMessage("Price peg updated successfully.");
+            Utils_1.logPegMessage("Price peg updated successfully.");
+            Utils_1.logPegMessageNewline();
         };
         this.getFiatRate = function (usdRate, conversionRate, precision) {
             var rate = 0;
@@ -219,7 +222,6 @@ var PricePeg = (function () {
             }
             //if debug is enabled artificially increment by config'd amount
             if (config_1.default.enablePegUpdateDebug) {
-                console.log("Current this.sysRates ", JSON.stringify(_this.sysRates.rates));
                 convertedValue = _this.sysRates.rates[0].rate + config_1.default.debugPegUpdateIncrement;
             }
             return convertedValue;
@@ -303,7 +305,6 @@ var PricePeg = (function () {
             var avgZECVal = avgSum / _this.ZECBTCConversionCache.length;
             var avgSYSVal = _this.getSYSBTCAverage(amount);
             var avgVal = avgZECVal / avgSYSVal;
-            console.log("ZEC:", avgZECVal + " n " + avgSYSVal);
             return avgVal * amount;
         };
         this.getBTCUSDAverage = function (amount) {
@@ -316,15 +317,6 @@ var PricePeg = (function () {
             var avgVal = avgSum / _this.BTCFiatConversionCache.length;
             return avgVal * amount;
         };
-        this.logPegMessage = function (msg) {
-            msg = new Date() + " - " + msg;
-            console.log(msg);
-            fs.appendFile("./peg.log", msg + "\n", function (err) {
-                if (err) {
-                    return console.log(err);
-                }
-            });
-        };
         if (!config_1.default.enableLivePegUpdates) {
             this.fiatDataSource.formattedCurrencyConversionData = mockPeg;
         }
@@ -334,4 +326,3 @@ var PricePeg = (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = PricePeg;
 ;
-//# sourceMappingURL=PricePeg.js.map

@@ -1,4 +1,6 @@
 "use strict";
+var _this = this;
+var fs = require("fs");
 exports.getDeepValue = function (obj, path) {
     for (var i = 0, pathParts = path.split('.'), len = pathParts.length; i < len; i++) {
         obj = obj[pathParts[i]];
@@ -17,6 +19,31 @@ exports.getHumanDate = function (time) {
     // Will display time in 10:30:23 format
     return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
 };
+exports.logPegMessage = function (msg, includeTimeStamp) {
+    if (includeTimeStamp === void 0) { includeTimeStamp = true; }
+    msg = includeTimeStamp ? new Date() + " - " + msg : msg;
+    console.log(msg);
+    exports.writeToFile("./peg.log", msg + "\n");
+};
+exports.writeToFile = function (filePath, content, append) {
+    if (append === void 0) { append = true; }
+    if (append) {
+        fs.appendFile(filePath, content, function (err) {
+            if (err) {
+                return console.log("ERROR APPENDING TO PEG LOG: ", JSON.stringify(err));
+            }
+        });
+    }
+    else {
+        fs.writeFile(filePath, content, function (err) {
+            if (err) {
+                return console.log("ERROR WRITING TO PEG LOG: ", JSON.stringify(err));
+            }
+        });
+    }
+};
+exports.logPegMessageNewline = function () {
+    _this.logPegMessage("", false);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = exports.getDeepValue;
-//# sourceMappingURL=Utils.js.map

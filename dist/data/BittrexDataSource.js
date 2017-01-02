@@ -21,4 +21,3 @@ var BittrexDataSource = (function (_super) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = BittrexDataSource;
 ;
-//# sourceMappingURL=BittrexDataSource.js.map

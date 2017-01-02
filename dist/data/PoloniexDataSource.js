@@ -21,4 +21,3 @@ var PoloniexDataSource = (function (_super) {
 }(BaseConversionDataSource_1.default));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = PoloniexDataSource;
-//# sourceMappingURL=PoloniexDataSource.js.map

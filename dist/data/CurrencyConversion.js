@@ -31,4 +31,3 @@ exports.CurrencyConversionType = {
         ZEC: "ZEC"
     }
 };
-//# sourceMappingURL=CurrencyConversion.js.map

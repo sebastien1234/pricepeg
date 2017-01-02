@@ -11,4 +11,3 @@ app.all('/', function (req, res) {
     history_1.default(req, res, peg);
 });
 server.listen(PORT);
-//# sourceMappingURL=server.js.map

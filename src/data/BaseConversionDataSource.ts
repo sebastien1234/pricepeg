@@ -1,4 +1,5 @@
 import CurrencyConversion from "./CurrencyConversion";
+import {logPegMessage} from "./Utils";
 let rp = require('request-promise');
 let Q = require('q');
 
@@ -18,7 +19,7 @@ export default class BaseConversionDataSource {
 
   formatCurrencyConversionData = (rawCurrencyResponseData: any) => {
     //convert the raw currency conversion data to a standard format, may differ by datasource
-    console.log("Handling response in base data source handler.");
+    logPegMessage("Handling response in base data source handler.");
 
     return null; //this should be overridden!
   };
@@ -38,7 +39,7 @@ export default class BaseConversionDataSource {
         deferred.resolve();
     })
     .catch((err) => { // if rp.get rejects (e.g. 500), do this:
-      console.log("Error requesting data.", err);
+      logPegMessage("Error requesting data." + JSON.stringify(err));
       deferred.reject(err);
     });
 
@@ -49,7 +50,7 @@ export default class BaseConversionDataSource {
     this.rawCurrencyConversionData = response;
     this.lastSuccessfulFetchTime = Date.now();
 
-    console.log(this.dataUrl + " returned!");
+   logPegMessage(this.dataUrl + " returned!");
 
     this.formatCurrencyConversionData(this.rawCurrencyConversionData);
   };

@@ -4,9 +4,7 @@
   "description": "Maintains SYS price peg against a variety of currencies",
   "main": "dist/server.js",
   "scripts": {
-    "build": "rm -rf dist && tsc && cp -R ./src/static/ ./dist/static",
-    "start-unix": "screen nodejs dist/server.js",
-    "start-osx": "node dist/server",
+    "build": "rm -rf dist && tsc && cp -R ./src/static/ ./dist/static/",
     "test": "mocha ./dist/test"
   },
   "repository": {

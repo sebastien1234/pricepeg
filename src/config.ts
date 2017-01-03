@@ -1,3 +1,15 @@
+export interface LogLevel {
+  logNetworkEvents?: boolean;
+  logBlockchainEvents?: boolean;
+  logPriceCheckEvents?: boolean;
+}
+
+const logLevel:LogLevel = {
+  logNetworkEvents: false,
+  logBlockchainEvents: true,
+  logPriceCheckEvents: true
+};
+
 export const config = {
   maxUpdatesPerPeriod: 6, // maximum number of peg updates that will be allowed to occur in a single period
   updatePeriod: 60 * 60 * 1, //defintion of the duration of a single period in seconds
@@ -17,7 +29,9 @@ export const config = {
   pegalias: "pegtest1",
   pegalias_aliaspeg: "pegtest1",
 
-  httpport: 8080
+  httpport: 8080,
+
+  logLevel: logLevel
 
 };
 

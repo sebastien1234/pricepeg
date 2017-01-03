@@ -115,9 +115,11 @@ export default class PricePeg {
   };
 
   handleCacheRefreshComplete = (checkForPegUpdate) => {
-    //any time we fetch crypto rates, fetch the fiat rates too
-    logPegMessage("Cache refresh completed, check for peg value changes == " + checkForPegUpdate);
-    logPegMessageNewline();
+    if(config.logLevel.logNetworkEvents) {
+      //any time we fetch crypto rates, fetch the fiat rates too
+      logPegMessage("Cache refresh completed, check for peg value changes == " + checkForPegUpdate);
+      logPegMessageNewline();
+    }
 
     this.fiatDataSource.fetchCurrencyConversionData().then((result) => {
 
@@ -137,13 +139,18 @@ export default class PricePeg {
     let deferred = Q.defer();
 
     this.getPricePeg().then((currentValue) => {
-      logPegMessage("Current peg value: " + JSON.stringify(currentValue));
+      if(config.logLevel.logPriceCheckEvents)
+        logPegMessage("Current peg value: " + JSON.stringify(currentValue));
+
       if (this.sysRates == null) {
-        logPegMessage("No current value set, setting, setting first result as current value.");
+        if(config.logLevel.logPriceCheckEvents)
+          logPegMessage("No current value set, setting, setting first result as current value.");
+
         this.sysRates = currentValue;
       }
 
-      logPegMessageNewline();
+      if(config.logLevel.logPriceCheckEvents)
+        logPegMessageNewline();
 
       let newValue = this.convertToPricePeg();
 
@@ -155,13 +162,17 @@ export default class PricePeg {
           percentChange = ((newValue.rates[0].rate - currentValue.rates[0].rate) / currentValue.rates[0].rate) * 100;
         }
 
-        logPegMessage("Checking price. Current v. new = " + currentValue.rates[0].rate + " v. " + newValue.rates[0].rate + " == " + percentChange + "% change");
-        logPegMessageNewline();
+        if(config.logLevel.logPriceCheckEvents) {
+          logPegMessage("Checking price. Current v. new = " + currentValue.rates[0].rate + " v. " + newValue.rates[0].rate + " == " + percentChange + "% change");
+          logPegMessageNewline();
+        }
 
         percentChange = percentChange < 0 ? percentChange * -1 : percentChange; //convert neg percent to positive
 
         if (percentChange > (config.updateThresholdPercentage * 100)) {
-          logPegMessage("Attempting to update price peg.");
+          if(config.logLevel.logBlockchainEvents)
+            logPegMessage("Attempting to update price peg.");
+
           this.setPricePeg(newValue, currentValue).then((result) => {
             deferred.resolve(result);
           });
@@ -211,7 +222,9 @@ export default class PricePeg {
     let currentIntervalStartTime = now - ((config.updatePeriod * 1000) * currentInterval);
 
     let updatesInThisPeriod = 0;
-    logPegMessage("Attempting to update price peg if within safe parameters.");
+    if(config.logLevel.logBlockchainEvents)
+      logPegMessage("Attempting to update price peg if within safe parameters.");
+
     updatesInThisPeriod += this.updateHistory.filter((item) => {
       return item.date > currentIntervalStartTime;
     }).length;
@@ -250,8 +263,10 @@ export default class PricePeg {
 
     this.sysRates = newValue;
 
-    logPegMessage("Price peg updated successfully.");
-    logPegMessageNewline();
+    if(config.logLevel.logBlockchainEvents) {
+      logPegMessage("Price peg updated successfully.");
+      logPegMessageNewline();
+    }
   };
 
   getFiatRate = (usdRate, conversionRate, precision) => {

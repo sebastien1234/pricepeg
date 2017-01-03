@@ -2,7 +2,6 @@
 var Utils_1 = require("./data/Utils");
 var Q = require('q');
 var config_1 = require("./config");
-var BittrexDataSource_1 = require("./data/BittrexDataSource");
 var PoloniexDataSource_1 = require("./data/PoloniexDataSource");
 var CoinbaseDataSource_1 = require("./data/CoinbaseDataSource");
 var FixerFiatDataSource_1 = require("./data/FixerFiatDataSource");
@@ -39,11 +38,11 @@ var PricePeg = (function () {
         this.updateInterval = null;
         this.fiatDataSource = new FixerFiatDataSource_1.default("USD", "US Dollar", "http://api.fixer.io/latest?base=USD");
         this.SYSBTCConversionCache = [
-            new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS, "ZCash", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS", "result.Bid"),
+            /*new BittrrexDataSource(CurrencyConversionType.CRYPTO.SYS, "ZCash", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS", "result.Bid"),*/
             new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS, "Syscoin", "https://poloniex.com/public?command=returnTicker", "BTC_SYS.last")
         ];
         this.ZECBTCConversionCache = [
-            new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC, "Zcash", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),
+            /*new BittrrexDataSource(CurrencyConversionType.CRYPTO.ZEC, "Zcash", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),*/
             new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC, "ZCash", "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")
         ];
         this.BTCFiatConversionCache = [
@@ -91,9 +90,11 @@ var PricePeg = (function () {
             });
         };
         this.handleCacheRefreshComplete = function (checkForPegUpdate) {
-            //any time we fetch crypto rates, fetch the fiat rates too
-            Utils_1.logPegMessage("Cache refresh completed, check for peg value changes == " + checkForPegUpdate);
-            Utils_1.logPegMessageNewline();
+            if (config_1.default.logLevel.logNetworkEvents) {
+                //any time we fetch crypto rates, fetch the fiat rates too
+                Utils_1.logPegMessage("Cache refresh completed, check for peg value changes == " + checkForPegUpdate);
+                Utils_1.logPegMessageNewline();
+            }
             _this.fiatDataSource.fetchCurrencyConversionData().then(function (result) {
                 _this.sysBTCConversionValue = _this.getSYSBTCAverage();
                 _this.sysZECConversionValue = _this.getSYSZECAverage();
@@ -107,12 +108,15 @@ var PricePeg = (function () {
         this.checkPricePeg = function () {
             var deferred = Q.defer();
             _this.getPricePeg().then(function (currentValue) {
-                Utils_1.logPegMessage("Current peg value: " + JSON.stringify(currentValue));
+                if (config_1.default.logLevel.logPriceCheckEvents)
+                    Utils_1.logPegMessage("Current peg value: " + JSON.stringify(currentValue));
                 if (_this.sysRates == null) {
-                    Utils_1.logPegMessage("No current value set, setting, setting first result as current value.");
+                    if (config_1.default.logLevel.logPriceCheckEvents)
+                        Utils_1.logPegMessage("No current value set, setting, setting first result as current value.");
                     _this.sysRates = currentValue;
                 }
-                Utils_1.logPegMessageNewline();
+                if (config_1.default.logLevel.logPriceCheckEvents)
+                    Utils_1.logPegMessageNewline();
                 var newValue = _this.convertToPricePeg();
                 if (config_1.default.enablePegUpdateDebug) {
                     _this.setPricePeg(newValue, currentValue);
@@ -122,11 +126,14 @@ var PricePeg = (function () {
                     if (newValue.rates[0].rate != currentValue.rates[0].rate) {
                         percentChange = ((newValue.rates[0].rate - currentValue.rates[0].rate) / currentValue.rates[0].rate) * 100;
                     }
-                    Utils_1.logPegMessage("Checking price. Current v. new = " + currentValue.rates[0].rate + " v. " + newValue.rates[0].rate + " == " + percentChange + "% change");
-                    Utils_1.logPegMessageNewline();
+                    if (config_1.default.logLevel.logPriceCheckEvents) {
+                        Utils_1.logPegMessage("Checking price. Current v. new = " + currentValue.rates[0].rate + " v. " + newValue.rates[0].rate + " == " + percentChange + "% change");
+                        Utils_1.logPegMessageNewline();
+                    }
                     percentChange = percentChange < 0 ? percentChange * -1 : percentChange; //convert neg percent to positive
                     if (percentChange > (config_1.default.updateThresholdPercentage * 100)) {
-                        Utils_1.logPegMessage("Attempting to update price peg.");
+                        if (config_1.default.logLevel.logBlockchainEvents)
+                            Utils_1.logPegMessage("Attempting to update price peg.");
                         _this.setPricePeg(newValue, currentValue).then(function (result) {
                             deferred.resolve(result);
                         });
@@ -167,7 +174,8 @@ var PricePeg = (function () {
             //see how many updates have happened in this period
             var currentIntervalStartTime = now - ((config_1.default.updatePeriod * 1000) * currentInterval);
             var updatesInThisPeriod = 0;
-            Utils_1.logPegMessage("Attempting to update price peg if within safe parameters.");
+            if (config_1.default.logLevel.logBlockchainEvents)
+                Utils_1.logPegMessage("Attempting to update price peg if within safe parameters.");
             updatesInThisPeriod += _this.updateHistory.filter(function (item) {
                 return item.date > currentIntervalStartTime;
             }).length;
@@ -204,8 +212,10 @@ var PricePeg = (function () {
                 value: oldValue
             });
             _this.sysRates = newValue;
-            Utils_1.logPegMessage("Price peg updated successfully.");
-            Utils_1.logPegMessageNewline();
+            if (config_1.default.logLevel.logBlockchainEvents) {
+                Utils_1.logPegMessage("Price peg updated successfully.");
+                Utils_1.logPegMessageNewline();
+            }
         };
         this.getFiatRate = function (usdRate, conversionRate, precision) {
             var rate = 0;

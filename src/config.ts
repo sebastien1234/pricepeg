@@ -13,7 +13,7 @@ const logLevel:LogLevel = {
 export const config = {
   maxUpdatesPerPeriod: 6, // maximum number of peg updates that will be allowed to occur in a single period
   updatePeriod: 60 * 60 * 1, //defintion of the duration of a single period in seconds
-  updateThresholdPercentage: 0.0001, //percentage at which an update is attempted, if value of peg fluctuates +/- this range
+  updateThresholdPercentage: 0.05, //percentage at which an update is attempted, if value of peg fluctuates +/- this range
   updateInterval: 10, //time in second to check for price change updates
 
   enableLivePegUpdates: true, //debug mode, disables live updates to peg on network

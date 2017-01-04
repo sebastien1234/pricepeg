@@ -3,6 +3,8 @@ import PricePeg from "./PricePeg";
 
 export const getHistoryPage = (req, res, peg: PricePeg) => {
   const updateTime = (config.updateInterval / 60).toFixed(2).indexOf(".00") == -1 ? (config.updateInterval / 60).toFixed(2) : (config.updateInterval / 60);
+  const formattedUpdateThreshold = (config.updateThresholdPercentage * 100).toString().indexOf(".") == -1 ? (config.updateThresholdPercentage * 100).toString() : (config.updateThresholdPercentage * 100).toString().substr(0, (config.updateThresholdPercentage * 100).toString().indexOf(".") + 4);
+
   res.writeHead(200, {'Content-Type': 'text/html'});
   res.write(`
     <!DOCTYPE html><html><head> 
@@ -27,25 +29,26 @@ export const getHistoryPage = (req, res, peg: PricePeg) => {
     <div class="jumbotron"> 
     <div style="text-align:center"><img src="syscoin_icon.png" width="200" height="200" style="" /></div>
     <p style="font-size:18px; text-align: center">
-    The Syscoin Team price peg uses the "sysrates.peg" alias on the Syscoin blockchain and is the default price peg for all items being sold on the 
+    The Syscoin Team price peg uses the "${config.pegalias}" alias on the Syscoin blockchain and is the default price peg for all items being sold on the 
     Syscoin Decentralized Marketplace. The price peg uses averages SYS/BTC rates from Bittrex and Poloniex, USD/BTC rates from Coinbase, and USD/Fiat rates from Fixer.io. <br><br>
-    The "sysrates.peg" price peg is updated anytime the SYS/BTC or USD/BTC price moves +/- 5% of the current values stored on the blockchain, this check is performed every ` + updateTime + ` minutes. 
+    The "${config.pegalias}" price peg is updated anytime the SYS/BTC or USD/BTC price moves +/- ${formattedUpdateThreshold}% of the current values stored on the blockchain, this check is performed every ${updateTime} minutes. 
     The rates below represent the amount of Syscoin it would take to equal 1 unit of the given currencies based on market rates. 
     For more information on how price pegging works in Syscoin please <a href="http://syscoin.org/faqs/price-pegging-work/">see the FAQ.</a><br><br>
-    Values in the below are trimmed to 2 decimals. Full value can be seen in history here or on the blockchain. To support the Syscoin team price peg please send SYS to "sysrates.peg", all funds are used to cover alias update costs.</p>
+    Values in the below are trimmed to 2 decimals. Full value can be seen in history here or on the blockchain. To support the Syscoin team price peg please send SYS to "${config.pegalias}", all funds are used to cover alias update costs.</p>
     
     <p class="disclaimer"><b>Disclaimer:</b> The Syscoin Team does its best to ensure the price peg is running properly 24/7/365 and that rates produced by the peg are accurate based on market rates.
     By using the Syscoin Team price peg you acknowledge this and release the team for any liability related to inaccuracies or erroneous peg values.</p>
     <table style="text-align:center; width: 100%">
     <tr>`);
   for (let i = 0; i < peg.sysRates.rates.length - 1; i++) {
-    res.write('<td style="padding: 10px"><h3><b>' + peg.sysRates.rates[i].currency + '/SYS:</b> ' + peg.sysRates.rates[i].rate.toString().substr(0, peg.sysRates.rates[i].rate.toString().indexOf(".") + 2) + '</h3></td>');
+    const formattedValue = peg.sysRates.rates[i].rate.toString().indexOf(".") == -1 ? peg.sysRates.rates[i].rate.toString() : peg.sysRates.rates[i].rate.toString().substr(0, peg.sysRates.rates[i].rate.toString().indexOf(".") + 2);
+    res.write(`<td style="padding: 10px"><h3><b>${peg.sysRates.rates[i].currency}/SYS:</b> ${formattedValue}</h3></td>`);
   }
 
   res.write(`</tr>
     </table>
     <hr><h4>Current Raw Value:</h4> 
-    <textarea style="width:100%;height:70px">` + JSON.stringify(peg.sysRates) + `</textarea>
+    <textarea style="width:100%;height:70px">${JSON.stringify(peg.sysRates)}</textarea>
     </div> 
     
     <div class="panel panel-default"> 
@@ -64,8 +67,8 @@ export const getHistoryPage = (req, res, peg: PricePeg) => {
   for (let i = peg.updateHistory.length - 1; i >= 0; i--) {
     res.write(`<tr>                            
     <td><span class="glyphicon glyphicon-ok" /></td>      
-    <td>` + timeConverter(peg.updateHistory[i].date) + `</td>      
-    <td style="font-family: Lucida Console, monospace">` + JSON.stringify(peg.updateHistory[i].value) + `</td>      
+    <td>${timeConverter(peg.updateHistory[i].date)}</td>      
+    <td style="font-family: Lucida Console, monospace">${JSON.stringify(peg.updateHistory[i].value)}</td>      
     </tr>`);
   }
   res.write('</tbody></table></div>');

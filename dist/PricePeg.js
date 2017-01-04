@@ -2,6 +2,7 @@
 var Utils_1 = require("./data/Utils");
 var Q = require('q');
 var config_1 = require("./config");
+var BittrexDataSource_1 = require("./data/BittrexDataSource");
 var PoloniexDataSource_1 = require("./data/PoloniexDataSource");
 var CoinbaseDataSource_1 = require("./data/CoinbaseDataSource");
 var FixerFiatDataSource_1 = require("./data/FixerFiatDataSource");
@@ -38,11 +39,11 @@ var PricePeg = (function () {
         this.updateInterval = null;
         this.fiatDataSource = new FixerFiatDataSource_1.default("USD", "US Dollar", "http://api.fixer.io/latest?base=USD");
         this.SYSBTCConversionCache = [
-            /*new BittrrexDataSource(CurrencyConversionType.CRYPTO.SYS, "ZCash", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS", "result.Bid"),*/
+            new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS, "Syscoin", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS", "result.Bid"),
             new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS, "Syscoin", "https://poloniex.com/public?command=returnTicker", "BTC_SYS.last")
         ];
         this.ZECBTCConversionCache = [
-            /*new BittrrexDataSource(CurrencyConversionType.CRYPTO.ZEC, "Zcash", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),*/
+            new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC, "ZCash", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),
             new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC, "ZCash", "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")
         ];
         this.BTCFiatConversionCache = [

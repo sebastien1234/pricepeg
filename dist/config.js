@@ -1,13 +1,13 @@
 "use strict";
 var logLevel = {
-    logNetworkEvents: false,
+    logNetworkEvents: true,
     logBlockchainEvents: true,
     logPriceCheckEvents: true
 };
 exports.config = {
     maxUpdatesPerPeriod: 6,
     updatePeriod: 60 * 60 * 1,
-    updateThresholdPercentage: 0.0001,
+    updateThresholdPercentage: 0.05,
     updateInterval: 10,
     enableLivePegUpdates: true,
     enablePegUpdateDebug: false,

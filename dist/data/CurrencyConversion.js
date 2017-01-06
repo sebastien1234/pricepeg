@@ -8,10 +8,10 @@ var CurrencyConversion = (function () {
         this.toCurrencyLabel = toCurrencyLabel;
         this.fromCurrencySymbol = fromCurrencySymbol;
         this.fromCurrencyLabel = fromCurrencyLabel;
-        this.fromCurrencyAmount = fromCurrencyAmount;
+        this.fromCurrencyAmount = parseFloat(fromCurrencyAmount.toString()); // force to number type
         this.toCurrencySymbol = toCurrencySymbol;
         this.toCurrencyLabel = toCurrencyLabel;
-        this.toCurrencyAmount = parseFloat(toCurrencyAmount);
+        this.toCurrencyAmount = parseFloat(toCurrencyAmount.toString()); //force to number type
     }
     return CurrencyConversion;
 }());
@@ -19,15 +19,39 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = CurrencyConversion;
 exports.CurrencyConversionType = {
     FIAT: {
-        USD: "USD",
-        GBP: "GBP",
-        CNY: "CNY",
-        EUR: "EUR",
-        CAD: "CAD"
+        USD: {
+            symbol: "USD",
+            label: "US Dollar"
+        },
+        GBP: {
+            symbol: "GBP",
+            label: "British Pound",
+        },
+        CNY: {
+            symbol: "CNY",
+            label: "Chinese Yuan"
+        },
+        EUR: {
+            symbol: "EUR",
+            label: "Euro"
+        },
+        CAD: {
+            symbol: "CAD",
+            label: "Canada"
+        }
     },
     CRYPTO: {
-        BTC: "BTC",
-        SYS: "SYS",
-        ZEC: "ZEC"
+        BTC: {
+            symbol: "BTC",
+            label: "Bitcoin"
+        },
+        SYS: {
+            symbol: "SYS",
+            label: "Syscoin"
+        },
+        ZEC: {
+            symbol: "ZEC",
+            label: "ZCash"
+        }
     }
 };

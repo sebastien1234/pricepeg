@@ -6,13 +6,14 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var BaseConversionDataSource_1 = require("./BaseConversionDataSource");
 var CurrencyConversion_1 = require("./CurrencyConversion");
+var CurrencyConversion_2 = require("./CurrencyConversion");
 var CoinbaseDataSource = (function (_super) {
     __extends(CoinbaseDataSource, _super);
     function CoinbaseDataSource() {
         var _this = _super.apply(this, arguments) || this;
         _this.formatCurrencyConversionData = function (rawCurrencyResponseData) {
-            //console.log("Handling response in coinbase handler.");
-            _this.formattedCurrencyConversionData = new CurrencyConversion_1.default(_this.baseCurrencySymbol, _this.baseCurrencyLabel, 1, "BTC", "Bitcoin", rawCurrencyResponseData.btc_to_usd);
+            //console.log("Handling response in coinbase handler.", rawCurrencyResponseData.btc_to_usd);
+            _this.formattedCurrencyConversionData = new CurrencyConversion_1.default(_this.baseCurrencySymbol, _this.baseCurrencyLabel, 1, CurrencyConversion_2.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_2.CurrencyConversionType.CRYPTO.BTC.label, rawCurrencyResponseData.btc_to_usd);
         };
         return _this;
     }

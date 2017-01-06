@@ -7,6 +7,7 @@ var PoloniexDataSource_1 = require("./data/PoloniexDataSource");
 var CoinbaseDataSource_1 = require("./data/CoinbaseDataSource");
 var FixerFiatDataSource_1 = require("./data/FixerFiatDataSource");
 var CurrencyConversion_1 = require("./data/CurrencyConversion");
+var CryptoConverter_1 = require("./data/CryptoConverter");
 var syscoin = require('syscoin');
 var client = new syscoin.Client({
     host: config_1.default.rpcserver,
@@ -33,22 +34,14 @@ var PricePeg = (function () {
         this.startTime = null;
         this.updateHistory = [];
         this.sysRates = null;
-        this.sysBTCConversionValue = 0;
-        this.sysZECConversionValue = 0;
-        this.btcUSDConversionValue = 0;
         this.updateInterval = null;
-        this.fiatDataSource = new FixerFiatDataSource_1.default("USD", "US Dollar", "http://api.fixer.io/latest?base=USD");
-        this.SYSBTCConversionCache = [
-            new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS, "Syscoin", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS", "result.Bid"),
-            new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS, "Syscoin", "https://poloniex.com/public?command=returnTicker", "BTC_SYS.last")
-        ];
-        this.ZECBTCConversionCache = [
-            new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC, "ZCash", "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),
-            new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC, "ZCash", "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")
-        ];
-        this.BTCFiatConversionCache = [
-            new CoinbaseDataSource_1.default("USD", "US Dollar", "https://coinbase.com/api/v1/currencies/exchange_rates")
-        ];
+        this.fiatDataSource = new FixerFiatDataSource_1.default("USD", "US Dollar", "http://api.fixer.io/latest?base=USD"); //used to extrapolate other Fiat/SYS pairs off SYS/USD
+        this.conversionDataSources = {};
+        this.conversionKeys = {
+            BTCUSD: CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol + CurrencyConversion_1.CurrencyConversionType.FIAT.USD.symbol,
+            SYSBTC: CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.symbol + CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol,
+            ZECBTC: CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol + CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol
+        };
         this.start = function () {
             Utils_1.logPegMessage("Starting PricePeg with config: \n" + JSON.stringify(config_1.default));
             if (config_1.default.enableLivePegUpdates)
@@ -67,9 +60,9 @@ var PricePeg = (function () {
         this.startUpdateInterval = function () {
             _this.fiatDataSource.fetchCurrencyConversionData().then(function (result) {
                 if (!config_1.default.enablePegUpdateDebug) {
-                    _this.refreshCache(true);
+                    _this.refreshCurrentRates(true);
                     _this.updateInterval = setInterval(function () {
-                        _this.refreshCache(true);
+                        _this.refreshCurrentRates(true);
                     }, config_1.default.updateInterval * 1000);
                 }
                 else {
@@ -83,28 +76,24 @@ var PricePeg = (function () {
         this.stopUpdateInterval = function () {
             clearInterval(_this.updateInterval);
         };
-        this.refreshCache = function (checkForPegUpdate) {
-            var dataSources = _this.SYSBTCConversionCache.concat(_this.ZECBTCConversionCache.concat(_this.BTCFiatConversionCache));
-            dataSources = dataSources.map(function (item) { return item.fetchCurrencyConversionData(); });
+        this.refreshCurrentRates = function (checkForPegUpdate) {
+            var dataSources = [];
+            for (var key in _this.conversionDataSources) {
+                dataSources.push(_this.conversionDataSources[key].refreshAverageExchangeRate());
+            }
             Q.all(dataSources).then(function (resultsArr) {
-                _this.handleCacheRefreshComplete(checkForPegUpdate);
+                _this.handleCurrentRateRefreshComplete(checkForPegUpdate);
             });
         };
-        this.handleCacheRefreshComplete = function (checkForPegUpdate) {
+        this.handleCurrentRateRefreshComplete = function (checkForPegUpdate) {
             if (config_1.default.logLevel.logNetworkEvents) {
                 //any time we fetch crypto rates, fetch the fiat rates too
-                Utils_1.logPegMessage("Cache refresh completed, check for peg value changes == " + checkForPegUpdate);
+                Utils_1.logPegMessage("Exchange rate refresh complete, check for peg value changes == " + checkForPegUpdate);
                 Utils_1.logPegMessageNewline();
             }
-            _this.fiatDataSource.fetchCurrencyConversionData().then(function (result) {
-                _this.sysBTCConversionValue = _this.getSYSBTCAverage();
-                _this.sysZECConversionValue = _this.getSYSZECAverage();
-                _this.btcUSDConversionValue = _this.getBTCUSDAverage();
-                _this.getSYSFiatValue(CurrencyConversion_1.CurrencyConversionType.FIAT.USD);
-                if (checkForPegUpdate) {
-                    _this.checkPricePeg();
-                }
-            });
+            if (checkForPegUpdate) {
+                _this.checkPricePeg();
+            }
         };
         this.checkPricePeg = function () {
             var deferred = Q.defer();
@@ -227,8 +216,8 @@ var PricePeg = (function () {
             var convertedValue;
             switch (fiatType) {
                 case "USD":
-                    convertedValue = 1 / _this.btcUSDConversionValue;
-                    convertedValue = convertedValue / _this.sysBTCConversionValue;
+                    convertedValue = 1 / _this.conversionDataSources[_this.conversionKeys.BTCUSD].getAveragedExchangeRate();
+                    convertedValue = convertedValue / _this.conversionDataSources[_this.conversionKeys.SYSBTC].getAveragedExchangeRate();
                     break;
             }
             //if debug is enabled artificially increment by config'd amount
@@ -244,50 +233,50 @@ var PricePeg = (function () {
             return {
                 rates: [
                     {
-                        currency: CurrencyConversion_1.CurrencyConversionType.FIAT.USD,
-                        rate: _this.getFixedRate(_this.getSYSFiatValue(CurrencyConversion_1.CurrencyConversionType.FIAT.USD), 2),
+                        currency: CurrencyConversion_1.CurrencyConversionType.FIAT.USD.symbol,
+                        rate: _this.getFixedRate(_this.getSYSFiatValue(CurrencyConversion_1.CurrencyConversionType.FIAT.USD.symbol), 2),
                         precision: 2
                     },
                     {
-                        "currency": CurrencyConversion_1.CurrencyConversionType.FIAT.EUR,
-                        "rate": _this.getFiatRate(_this.getSYSFiatValue(CurrencyConversion_1.CurrencyConversionType.FIAT.USD), _this.fiatDataSource.formattedCurrencyConversionData.EUR, 2),
+                        "currency": CurrencyConversion_1.CurrencyConversionType.FIAT.EUR.symbol,
+                        "rate": _this.getFiatRate(_this.getSYSFiatValue(CurrencyConversion_1.CurrencyConversionType.FIAT.USD.symbol), _this.fiatDataSource.formattedCurrencyConversionData.EUR, 2),
                         "escrowfee": 0.005,
                         "precision": 2
                     },
                     {
-                        "currency": CurrencyConversion_1.CurrencyConversionType.FIAT.GBP,
-                        "rate": _this.getFiatRate(_this.getSYSFiatValue(CurrencyConversion_1.CurrencyConversionType.FIAT.USD), _this.fiatDataSource.formattedCurrencyConversionData.GBP, 2),
+                        "currency": CurrencyConversion_1.CurrencyConversionType.FIAT.GBP.symbol,
+                        "rate": _this.getFiatRate(_this.getSYSFiatValue(CurrencyConversion_1.CurrencyConversionType.FIAT.USD.symbol), _this.fiatDataSource.formattedCurrencyConversionData.GBP, 2),
                         "escrowfee": 0.005,
                         "precision": 2
                     },
                     {
-                        "currency": CurrencyConversion_1.CurrencyConversionType.FIAT.CAD,
-                        "rate": _this.getFiatRate(_this.getSYSFiatValue(CurrencyConversion_1.CurrencyConversionType.FIAT.USD), _this.fiatDataSource.formattedCurrencyConversionData.CAD, 2),
+                        "currency": CurrencyConversion_1.CurrencyConversionType.FIAT.CAD.symbol,
+                        "rate": _this.getFiatRate(_this.getSYSFiatValue(CurrencyConversion_1.CurrencyConversionType.FIAT.USD.symbol), _this.fiatDataSource.formattedCurrencyConversionData.CAD, 2),
                         "escrowfee": 0.005,
                         "precision": 2
                     },
                     {
-                        "currency": CurrencyConversion_1.CurrencyConversionType.FIAT.CNY,
-                        "rate": _this.getFiatRate(_this.getSYSFiatValue(CurrencyConversion_1.CurrencyConversionType.FIAT.USD), _this.fiatDataSource.formattedCurrencyConversionData.CNY, 4),
+                        "currency": CurrencyConversion_1.CurrencyConversionType.FIAT.CNY.symbol,
+                        "rate": _this.getFiatRate(_this.getSYSFiatValue(CurrencyConversion_1.CurrencyConversionType.FIAT.USD.symbol), _this.fiatDataSource.formattedCurrencyConversionData.CNY, 4),
                         "escrowfee": 0.005,
                         "precision": 4
                     },
                     {
-                        "currency": CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC,
-                        "rate": _this.getFixedRate(1 / parseFloat(_this.sysBTCConversionValue.toString()), 8),
+                        "currency": CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol,
+                        "rate": _this.getFixedRate(1 / _this.conversionDataSources[_this.conversionKeys.SYSBTC].getAveragedExchangeRate(), 8),
                         "escrowfee": 0.01,
                         "fee": 75,
                         "precision": 8
                     },
                     {
-                        "currency": CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC,
-                        "rate": _this.getFixedRate(parseFloat(_this.sysZECConversionValue.toString()), 8),
+                        "currency": CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol,
+                        "rate": _this.getFixedRate(parseFloat(_this.conversionDataSources[_this.conversionKeys.SYSBTC].getAmountToEqualOne(_this.conversionDataSources[_this.conversionKeys.ZECBTC].getAveragedExchangeRate()).toString()), 8),
                         "escrowfee": 0.01,
                         "fee": 50,
                         "precision": 8
                     },
                     {
-                        "currency": CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS,
+                        "currency": CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.symbol,
                         "rate": _this.getFixedRate(1.0, 2),
                         "escrowfee": 0.005,
                         "fee": 1000,
@@ -296,41 +285,23 @@ var PricePeg = (function () {
                 ]
             };
         };
-        this.getSYSBTCAverage = function (amount) {
-            if (amount === void 0) { amount = 1; }
-            //first get the average across all the conversions
-            var avgSum = 0;
-            for (var i = 0; i < _this.SYSBTCConversionCache.length; i++) {
-                avgSum += _this.SYSBTCConversionCache[i].formattedCurrencyConversionData.toCurrencyAmount;
-            }
-            var avgVal = avgSum / _this.SYSBTCConversionCache.length;
-            return avgVal * amount;
-        };
-        this.getSYSZECAverage = function (amount) {
-            if (amount === void 0) { amount = 1; }
-            //first get the average across all the conversions
-            var avgSum = 0;
-            for (var i = 0; i < _this.ZECBTCConversionCache.length; i++) {
-                avgSum += _this.ZECBTCConversionCache[i].formattedCurrencyConversionData.toCurrencyAmount;
-            }
-            var avgZECVal = avgSum / _this.ZECBTCConversionCache.length;
-            var avgSYSVal = _this.getSYSBTCAverage(amount);
-            var avgVal = avgZECVal / avgSYSVal;
-            return avgVal * amount;
-        };
-        this.getBTCUSDAverage = function (amount) {
-            if (amount === void 0) { amount = 1; }
-            //first get the average across all the conversions
-            var avgSum = 0;
-            for (var i = 0; i < _this.BTCFiatConversionCache.length; i++) {
-                avgSum += _this.BTCFiatConversionCache[i].formattedCurrencyConversionData.toCurrencyAmount;
-            }
-            var avgVal = avgSum / _this.BTCFiatConversionCache.length;
-            return avgVal * amount;
-        };
         if (!config_1.default.enableLivePegUpdates) {
             this.fiatDataSource.formattedCurrencyConversionData = mockPeg;
         }
+        //setup conversions for currencies this peg will support
+        //CryptoConverter should only be used for exchanges which there is a direct API for, anything
+        //further conversions should happen in subclasses or this class
+        //BTC/USD
+        var conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1, CurrencyConversion_1.CurrencyConversionType.FIAT.USD.symbol, CurrencyConversion_1.CurrencyConversionType.FIAT.USD.label, 1);
+        this.conversionDataSources[this.conversionKeys.BTCUSD] = new CryptoConverter_1.default(conversion, [new CoinbaseDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.FIAT.USD.symbol, CurrencyConversion_1.CurrencyConversionType.FIAT.USD.label, "https://coinbase.com/api/v1/currencies/exchange_rates")]);
+        //SYS/BTC
+        conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.label, 1, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1);
+        this.conversionDataSources[this.conversionKeys.SYSBTC] = new CryptoConverter_1.default(conversion, [new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.label, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS", "result.Bid"),
+            new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.label, "https://poloniex.com/public?command=returnTicker", "BTC_SYS.last")]);
+        //ZEC/SYS
+        conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.label, 1, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1);
+        this.conversionDataSources[this.conversionKeys.ZECBTC] = new CryptoConverter_1.default(conversion, [new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.label, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),
+            new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.label, "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")]);
     }
     return PricePeg;
 }());

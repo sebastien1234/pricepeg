@@ -5,7 +5,7 @@ export interface LogLevel {
 }
 
 const logLevel:LogLevel = {
-  logNetworkEvents: false,
+  logNetworkEvents: true,
   logBlockchainEvents: true,
   logPriceCheckEvents: true
 };

@@ -48,4 +48,23 @@ export const logPegMessageNewline = () => {
   this.logPegMessage("", false);
 };
 
+export const getFiatExchangeRate = (usdRate, conversionRate, precision) => {
+  let rate = 0;
+
+  rate = usdRate / conversionRate;
+
+  return getFixedRate(rate, precision);
+};
+
+export const getFixedRate = (rate, precision) => {
+  return parseFloat(parseFloat(rate).toFixed(precision));
+};
+
+export const getPercentChange = (newRate, oldRate) => {
+  if (newRate != oldRate) { //calc % change
+    return  ((newRate - oldRate) / oldRate) * 100;
+  }
+  return 0;
+};
+
 export default getDeepValue;

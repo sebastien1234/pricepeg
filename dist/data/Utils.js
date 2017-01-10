@@ -45,5 +45,19 @@ exports.writeToFile = function (filePath, content, append) {
 exports.logPegMessageNewline = function () {
     _this.logPegMessage("", false);
 };
+exports.getFiatExchangeRate = function (usdRate, conversionRate, precision) {
+    var rate = 0;
+    rate = usdRate / conversionRate;
+    return exports.getFixedRate(rate, precision);
+};
+exports.getFixedRate = function (rate, precision) {
+    return parseFloat(parseFloat(rate).toFixed(precision));
+};
+exports.getPercentChange = function (newRate, oldRate) {
+    if (newRate != oldRate) {
+        return ((newRate - oldRate) / oldRate) * 100;
+    }
+    return 0;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = exports.getDeepValue;

@@ -1,4 +1,4 @@
-import {logPegMessage, logPegMessageNewline} from "./data/Utils";
+import {logPegMessage, logPegMessageNewline, getFixedRate, getFiatExchangeRate, getPercentChange} from "./data/Utils";
 const Q = require('q');
 
 import config from './config';
@@ -165,10 +165,7 @@ export default class PricePeg {
       if(config.enablePegUpdateDebug) {
         this.setPricePeg(newValue, currentValue);
       }else{
-        let percentChange = 0;
-        if (newValue.rates[0].rate != currentValue.rates[0].rate) { //calc % change
-          percentChange = ((newValue.rates[0].rate - currentValue.rates[0].rate) / currentValue.rates[0].rate) * 100;
-        }
+        let percentChange = getPercentChange(newValue.rates[0].rate, currentValue.rates[0].rate);
 
         if(config.logLevel.logPriceCheckEvents) {
           logPegMessage("Checking price. Current v. new = " + currentValue.rates[0].rate + " v. " + newValue.rates[0].rate + " == " + percentChange + "% change");
@@ -277,14 +274,6 @@ export default class PricePeg {
     }
   };
 
-  getFiatRate = (usdRate, conversionRate, precision) => {
-    let rate = 0;
-
-    rate = usdRate / conversionRate;
-
-    return this.getFixedRate(rate, precision);
-  };
-
   getSYSFiatValue = (fiatType) => {
     let convertedValue;
     switch (fiatType) {
@@ -302,59 +291,55 @@ export default class PricePeg {
     return convertedValue;
   };
 
-  getFixedRate = (rate, precision) => {
-    return parseFloat(parseFloat(rate).toFixed(precision));
-  };
-
   convertToPricePeg = (): PricePegModel => {
     return {
       rates: [
         {
           currency: CurrencyConversionType.FIAT.USD.symbol,
-          rate: this.getFixedRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol), 2),
+          rate: getFixedRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol), 2),
           precision: 2
         },
         {
           "currency": CurrencyConversionType.FIAT.EUR.symbol,
-          "rate": this.getFiatRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol), this.fiatDataSource.formattedCurrencyConversionData.EUR, 2),
+          "rate": getFiatExchangeRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol), this.fiatDataSource.formattedCurrencyConversionData.EUR, 2),
           "escrowfee": 0.005,
           "precision": 2
         },
         {
           "currency": CurrencyConversionType.FIAT.GBP.symbol,
-          "rate": this.getFiatRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol), this.fiatDataSource.formattedCurrencyConversionData.GBP, 2),
+          "rate": getFiatExchangeRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol), this.fiatDataSource.formattedCurrencyConversionData.GBP, 2),
           "escrowfee": 0.005,
           "precision": 2
         },
         {
           "currency": CurrencyConversionType.FIAT.CAD.symbol,
-          "rate": this.getFiatRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol), this.fiatDataSource.formattedCurrencyConversionData.CAD, 2),
+          "rate": getFiatExchangeRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol), this.fiatDataSource.formattedCurrencyConversionData.CAD, 2),
           "escrowfee": 0.005,
           "precision": 2
         },
         {
           "currency": CurrencyConversionType.FIAT.CNY.symbol,
-          "rate": this.getFiatRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol), this.fiatDataSource.formattedCurrencyConversionData.CNY, 4),
+          "rate": getFiatExchangeRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol), this.fiatDataSource.formattedCurrencyConversionData.CNY, 4),
           "escrowfee": 0.005,
           "precision": 4
         },
         {
           "currency": CurrencyConversionType.CRYPTO.BTC.symbol,
-          "rate": this.getFixedRate(1 / this.conversionDataSources[this.conversionKeys.SYSBTC].getAveragedExchangeRate(), 8),
+          "rate": getFixedRate(1 / this.conversionDataSources[this.conversionKeys.SYSBTC].getAveragedExchangeRate(), 8),
           "escrowfee": 0.01,
           "fee": 75,
           "precision": 8
         },
         {
           "currency": CurrencyConversionType.CRYPTO.ZEC.symbol,
-          "rate": this.getFixedRate(parseFloat(this.conversionDataSources[this.conversionKeys.SYSBTC].getAmountToEqualOne(this.conversionDataSources[this.conversionKeys.ZECBTC].getAveragedExchangeRate()).toString()), 8),
+          "rate": getFixedRate(parseFloat(this.conversionDataSources[this.conversionKeys.SYSBTC].getAmountToEqualOne(this.conversionDataSources[this.conversionKeys.ZECBTC].getAveragedExchangeRate()).toString()), 8),
           "escrowfee": 0.01,
           "fee": 50,
           "precision": 8
         },
         {
           "currency": CurrencyConversionType.CRYPTO.SYS.symbol,
-          "rate": this.getFixedRate(1.0, 2),
+          "rate": getFixedRate(1.0, 2),
           "escrowfee": 0.005,
           "fee": 1000,
           "precision": 2

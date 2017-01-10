@@ -1,8 +1,8 @@
-import sinon = require("sinon");
-import rewire = require('rewire');
-import when = require('when');
-import assert = require('assert');
-import rp  = require('request-promise');
+import * as sinon from 'sinon';
+import * as when from 'when';
+import * as assert from 'assert';
+import * as rewire from 'rewire';
+import * as rp from 'request-promise'
 
 let RewiredComponent = rewire('../data/BaseConversionDataSource');
 let defaultComponentMock = {};
@@ -22,7 +22,6 @@ let defaultComponentMock = {};
 // that looks something like:
 
 import BaseConversionDataSource from "../data/BaseConversionDataSource";
-let Component: typeof BaseConversionDataSource & typeof RewiredComponent = <any> RewiredComponent;
 
 describe('fetchCurrencyConversionData', function () {
 
@@ -37,7 +36,7 @@ describe('fetchCurrencyConversionData', function () {
   });
 
   it('Should call the dataURL and base callback', function (done) {
-    let conversionDataSource = new Component("TSYS", "Test", "http://test2.com");
+    let conversionDataSource = new BaseConversionDataSource("TSYS", "Test", "http://test2.com");
     let handlerSpy = sinon.spy(conversionDataSource, "formatCurrencyConversionData");
 
     conversionDataSource.fetchCurrencyConversionData().then(function () {
@@ -52,7 +51,7 @@ describe('fetchCurrencyConversionData', function () {
   });
 
   it('Should properly manage lastFetchAttemptTime and lastSuccessfulFetchTime', function (done) {
-    let conversionDataSource = new Component("TSYS", "Test", "http://test2.com");
+    let conversionDataSource = new BaseConversionDataSource("TSYS", "Test", "http://test2.com");
 
     //store times before fetch
     let prevAttemptTime = conversionDataSource.lastFetchAttemptTime;
@@ -81,7 +80,7 @@ describe('rawCurrencyConversionData', function () {
   });
 
   it('Should store the raw data response', function (done) {
-    let conversionDataSource = new Component("TSYS", "Test", "http://test2.com");
+    let conversionDataSource = new BaseConversionDataSource("TSYS", "Test", "http://test2.com");
 
     conversionDataSource.fetchCurrencyConversionData().then(function () {
       assert.equal(conversionDataSource.rawCurrencyConversionData, "hello");

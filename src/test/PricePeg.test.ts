@@ -1,11 +1,8 @@
-let sinon = require('sinon');
-let when = require('when');
-let assert = require('assert');
-let rewire = require('rewire');
+import * as sinon from 'sinon';
+import * as when from 'when';
+import * as assert from 'assert';
 
-let rp = require('request-promise');
-let PricePeg = rewire('../PricePeg');
-let BaseConversionDataSource = rewire('../data/BaseConversionDataSource');
+import * as rp from 'request-promise';
 
 describe('fetchCurrencyConversionData', function () {
 
@@ -19,7 +16,11 @@ describe('fetchCurrencyConversionData', function () {
     done();
   });
 
-  it('Should call the dataURL and base callback', function (done) {
+  it('Should call the dataURL and base callback', (done) => {
+    let rewire = require('rewire');
+    let PricePeg = rewire('../PricePeg.js');
+    let BaseConversionDataSource = rewire('../data/BaseConversionDataSource.js');
+
     let conversionDataSource = new BaseConversionDataSource("TSYS", "Test", "http://test2.com");
     let handlerSpy = sinon.spy(conversionDataSource, "formatCurrencyConversionData");
 
@@ -33,4 +34,4 @@ describe('fetchCurrencyConversionData', function () {
       done();
     });
   });
-})
+});

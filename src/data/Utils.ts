@@ -1,7 +1,8 @@
 import * as fs from "fs";
 import * as Q from "q";
-import {HistoryLog} from "../PricePeg";
 import {config} from "../config";
+import {HistoryLog, ConversionDataEntry} from "../index";
+import {CurrencyConversionData} from "./CurrencyConversion";
 
 export const getDeepValue = (obj: any, path:string) => {
   for (let i=0, pathParts=path.split('.'), len=pathParts.length; i<len; i++){
@@ -59,7 +60,7 @@ export const writeToFile = (filePath: string, content: string, append: boolean =
 
 export const readFromFile = (filePath: string): Q.IPromise<string> => {
   let deferred = Q.defer();
-  fs.readFile(filePath, (err, data) => {
+  fs.readFile(filePath, "utf-8", (err, data) => {
     if (err) {
       console.log(`ERROR READING FROM FILE  ${JSON.stringify(err)}`);
       deferred.reject(err);
@@ -90,6 +91,15 @@ export const getFiatExchangeRate = (usdRate, conversionRate, precision) => {
   let rate = usdRate / conversionRate;
 
   return getFixedRate(rate, precision);
+};
+
+export const getCurrencyData = (symbol: string): ConversionDataEntry => {
+  for(let i = 0; i < CurrencyConversionData.length; i++) {
+    if(CurrencyConversionData[i].symbol == symbol)
+      return CurrencyConversionData[i];
+  }
+
+  return null;
 };
 
 export const getFixedRate = (rate, precision) => {

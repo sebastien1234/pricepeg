@@ -14,6 +14,7 @@ import {CurrencyConversionType, default as CurrencyConversion} from "./data/Curr
 import CryptoConverter from "./data/CryptoConverter";
 import * as Q from "q";
 import ConversionDataSource from "./data/ConversionDataSource";
+import {PricePegModel, HistoryLog} from "./index";
 
 const syscoin = require('syscoin');
 
@@ -44,6 +45,7 @@ interface ConverterCollection {
 }
 
 export default class PricePeg {
+  static supportedCurrencies;
 
   public startTime = null;
   public updateHistory: HistoryLog = [];
@@ -244,7 +246,6 @@ export default class PricePeg {
 
           if (config.logLevel.logPriceCheckEvents) {
             logPegMessage(`Checking price for ${currencyKey}: Current v. new = ${currentConversionRate}  v. ${newConversionRate} == ${percentChange}% change`);
-            logPegMessageNewline();
           }
 
           percentChange = percentChange < 0 ? percentChange * -1 : percentChange; //convert neg percent to positive
@@ -437,22 +438,15 @@ export default class PricePeg {
   };
 };
 
-interface PricePegModel {
-  rates: PricePegEntry[];
-}
-
-interface PricePegEntry {
-  currency: string;
-  rate: number; // how many SYS equal 1 of this currency
-  fee?: number; // fee per byte on transactions in satoshis, defaults to 25
-  escrowfee?: number; // escrow fee % for arbiters on offers that use this peg, defaults to 0.005 (0.05%)
-  precision: number; // int
-}
-
-export type HistoryLog = HistoryLogEntry[];
-
-export interface HistoryLogEntry {
-  date: number; //result of Date.now()
-  value: PricePegModel;
-}
+PricePeg.supportedCurrencies = [
+  CurrencyConversionType.FIAT.USD.symbol,
+  CurrencyConversionType.FIAT.CAD.symbol,
+  CurrencyConversionType.FIAT.CNY.symbol,
+  CurrencyConversionType.FIAT.GBP.symbol,
+  CurrencyConversionType.FIAT.EUR.symbol,
+  CurrencyConversionType.CRYPTO.BTC.symbol,
+  CurrencyConversionType.CRYPTO.SYS.symbol,
+  CurrencyConversionType.CRYPTO.ZEC.symbol,
+  CurrencyConversionType.CRYPTO.FCT.symbol
+];
 

@@ -162,7 +162,6 @@ var PricePeg = (function () {
                         var percentChange = Utils_1.getPercentChange(newConversionRate, currentConversionRate);
                         if (config_1.default.logLevel.logPriceCheckEvents) {
                             Utils_1.logPegMessage("Checking price for " + currencyKey + ": Current v. new = " + currentConversionRate + "  v. " + newConversionRate + " == " + percentChange + "% change");
-                            Utils_1.logPegMessageNewline();
                         }
                         percentChange = percentChange < 0 ? percentChange * -1 : percentChange; //convert neg percent to positive
                         if (percentChange > (config_1.default.updateThresholdPercentage * 100)) {
@@ -360,3 +359,14 @@ var PricePeg = (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = PricePeg;
 ;
+PricePeg.supportedCurrencies = [
+    CurrencyConversion_1.CurrencyConversionType.FIAT.USD.symbol,
+    CurrencyConversion_1.CurrencyConversionType.FIAT.CAD.symbol,
+    CurrencyConversion_1.CurrencyConversionType.FIAT.CNY.symbol,
+    CurrencyConversion_1.CurrencyConversionType.FIAT.GBP.symbol,
+    CurrencyConversion_1.CurrencyConversionType.FIAT.EUR.symbol,
+    CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol,
+    CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.symbol,
+    CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol,
+    CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.symbol
+];

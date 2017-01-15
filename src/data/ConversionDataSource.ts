@@ -1,5 +1,6 @@
 import BaseConversionDataSource from "./BaseConversionDataSource";
 import CurrencyConversion from "./CurrencyConversion";
+import {getDeepValue} from "./Utils";
 
 export default class ConversionDataSource extends BaseConversionDataSource {
 
@@ -8,12 +9,6 @@ export default class ConversionDataSource extends BaseConversionDataSource {
   }
 
   formatCurrencyConversionData = (rawCurrencyResponseData: any) => {
-    try {
-      this.formattedCurrencyConversionData = this.currencyConversion;
-      this.formattedCurrencyConversionData.toCurrencyAmount = parseFloat(rawCurrencyResponseData[this.responseDataPath]);
-    }catch(e) {
-      console.log("Error settings Formateted data", JSON.stringify(this.currencyConversion));
-    }
-
+    this.formattedCurrencyConversionData = new CurrencyConversion(this.baseCurrencySymbol, this.baseCurrencyLabel, 1, this.currencyConversion.toCurrencySymbol, this.currencyConversion.toCurrencyLabel, getDeepValue(rawCurrencyResponseData, this.responseDataPath));
   };
 }

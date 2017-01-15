@@ -1,13 +1,24 @@
-import config from './config';
-import PricePeg from './PricePeg';
-import history from './history';
+import config from "./config";
+import PricePeg from "./PricePeg";
+import history from "./history";
+import SetupWizard from "./SetupWizard";
+import {logPegMessage} from "./data/Utils";
+
 
 let express = require('express'),
   app = express(),
   server = require('http').createServer(app);
 
 let peg = new PricePeg();
-peg.start();
+
+let setupWizard = new SetupWizard();
+setupWizard.setup("currency.conf").then((validConfig) => {
+  logPegMessage("Valid config! Starting Peg.");
+  //peg.start();
+},
+(error) => {
+  console.log(`Setup error: ${error}`)
+});
 
 let PORT = config.httpport;
 

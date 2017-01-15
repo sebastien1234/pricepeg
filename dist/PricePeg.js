@@ -1,13 +1,11 @@
 "use strict";
 var Utils_1 = require("./data/Utils");
 var config_1 = require("./config");
-var BittrexDataSource_1 = require("./data/BittrexDataSource");
-var PoloniexDataSource_1 = require("./data/PoloniexDataSource");
-var CoinbaseDataSource_1 = require("./data/CoinbaseDataSource");
 var FixerFiatDataSource_1 = require("./data/FixerFiatDataSource");
 var CurrencyConversion_1 = require("./data/CurrencyConversion");
 var CryptoConverter_1 = require("./data/CryptoConverter");
 var Q = require("q");
+var ConversionDataSource_1 = require("./data/ConversionDataSource");
 var syscoin = require('syscoin');
 var client = new syscoin.Client({
     host: config_1.default.rpcserver,
@@ -343,19 +341,19 @@ var PricePeg = (function () {
         //further conversions should happen in subclasses or this class
         //BTC/USD
         var conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1, CurrencyConversion_1.CurrencyConversionType.FIAT.USD.symbol, CurrencyConversion_1.CurrencyConversionType.FIAT.USD.label, 1);
-        this.conversionDataSources[this.conversionKeys.BTCUSD] = new CryptoConverter_1.default(conversion, [new CoinbaseDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.FIAT.USD.symbol, CurrencyConversion_1.CurrencyConversionType.FIAT.USD.label, "https://coinbase.com/api/v1/currencies/exchange_rates")]);
+        this.conversionDataSources[this.conversionKeys.BTCUSD] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://coinbase.com/api/v1/currencies/exchange_rates", "btc_to_usd")]);
         //SYS/BTC
         conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.label, 1, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1);
-        this.conversionDataSources[this.conversionKeys.SYSBTC] = new CryptoConverter_1.default(conversion, [new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.label, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS", "result.Bid"),
-            new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.label, "https://poloniex.com/public?command=returnTicker", "BTC_SYS.last")]);
+        this.conversionDataSources[this.conversionKeys.SYSBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS", "result.Bid"),
+            new ConversionDataSource_1.default(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_SYS.last")]);
         //ZEC/SYS
         conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.label, 1, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1);
-        this.conversionDataSources[this.conversionKeys.ZECBTC] = new CryptoConverter_1.default(conversion, [new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.label, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),
-            new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.label, "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")]);
+        this.conversionDataSources[this.conversionKeys.ZECBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),
+            new ConversionDataSource_1.default(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")]);
         //FCT/SYS
         conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.label, 1, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1);
-        this.conversionDataSources[this.conversionKeys.FCTBTC] = new CryptoConverter_1.default(conversion, [new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.label, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-FCT", "result.Bid"),
-            new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.label, "https://poloniex.com/public?command=returnTicker", "BTC_FCT.last")]);
+        this.conversionDataSources[this.conversionKeys.FCTBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-FCT", "result.Bid"),
+            new ConversionDataSource_1.default(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_FCT.last")]);
     }
     return PricePeg;
 }());

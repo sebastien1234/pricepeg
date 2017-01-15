@@ -9,13 +9,11 @@ import {
   writeToFile
 } from "./data/Utils";
 import config from "./config";
-import BittrrexDataSource from "./data/BittrexDataSource";
-import PoloniexDataSource from "./data/PoloniexDataSource";
-import CoinbaseDataSource from "./data/CoinbaseDataSource";
 import FixerFiatDataSource from "./data/FixerFiatDataSource";
 import {CurrencyConversionType, default as CurrencyConversion} from "./data/CurrencyConversion";
 import CryptoConverter from "./data/CryptoConverter";
 import * as Q from "q";
+import ConversionDataSource from "./data/ConversionDataSource";
 
 const syscoin = require('syscoin');
 
@@ -85,25 +83,25 @@ export default class PricePeg {
     //BTC/USD
     let conversion = new CurrencyConversion(CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1, CurrencyConversionType.FIAT.USD.symbol, CurrencyConversionType.FIAT.USD.label, 1);
     this.conversionDataSources[this.conversionKeys.BTCUSD] = new CryptoConverter(conversion,
-      [new CoinbaseDataSource(CurrencyConversionType.FIAT.USD.symbol, CurrencyConversionType.FIAT.USD.label, "https://coinbase.com/api/v1/currencies/exchange_rates")]);
+      [new ConversionDataSource(conversion, "https://coinbase.com/api/v1/currencies/exchange_rates", "btc_to_usd")]);
 
     //SYS/BTC
     conversion = new CurrencyConversion(CurrencyConversionType.CRYPTO.SYS.symbol, CurrencyConversionType.CRYPTO.SYS.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
     this.conversionDataSources[this.conversionKeys.SYSBTC] = new CryptoConverter(conversion,
-      [new BittrrexDataSource(CurrencyConversionType.CRYPTO.SYS.symbol, CurrencyConversionType.CRYPTO.SYS.label, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS", "result.Bid"),
-        new PoloniexDataSource(CurrencyConversionType.CRYPTO.SYS.symbol, CurrencyConversionType.CRYPTO.SYS.label, "https://poloniex.com/public?command=returnTicker", "BTC_SYS.last")]);
+      [new ConversionDataSource(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS", "result.Bid"),
+        new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_SYS.last")]);
 
     //ZEC/SYS
     conversion = new CurrencyConversion(CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversionType.CRYPTO.ZEC.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
     this.conversionDataSources[this.conversionKeys.ZECBTC] = new CryptoConverter(conversion,
-      [new BittrrexDataSource(CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversionType.CRYPTO.ZEC.label, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),
-        new PoloniexDataSource(CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversionType.CRYPTO.ZEC.label, "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")]);
+      [new ConversionDataSource(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),
+        new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")]);
 
     //FCT/SYS
     conversion = new CurrencyConversion(CurrencyConversionType.CRYPTO.FCT.symbol, CurrencyConversionType.CRYPTO.FCT.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
     this.conversionDataSources[this.conversionKeys.FCTBTC] = new CryptoConverter(conversion,
-      [new BittrrexDataSource(CurrencyConversionType.CRYPTO.FCT.symbol, CurrencyConversionType.CRYPTO.FCT.label, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-FCT", "result.Bid"),
-        new PoloniexDataSource(CurrencyConversionType.CRYPTO.FCT.symbol, CurrencyConversionType.CRYPTO.FCT.label, "https://poloniex.com/public?command=returnTicker", "BTC_FCT.last")]);
+      [new ConversionDataSource(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-FCT", "result.Bid"),
+        new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_FCT.last")]);
   }
 
   start = () => {

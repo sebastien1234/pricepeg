@@ -13,7 +13,7 @@ export default class CurrencyConversion {
   }
 }
 
-export const CurrencyConversionData: ConversionDataEntry[] = [
+export const supportedCurrencies: ConversionDataEntry[] = [
   {
     symbol: "USD",
     label: "US Dollar"
@@ -47,8 +47,24 @@ export const CurrencyConversionData: ConversionDataEntry[] = [
     label: "ZCash"
   },
   {
+    symbol: "ETH",
+    label: "Ethereum"
+  },
+  {
+    symbol: "DASH",
+    label: "Dash"
+  },
+  {
+    symbol: "XMR",
+    label: "Monero"
+  },
+  {
     symbol: "FCT",
     label: "Factom"
+  },
+  {
+    symbol: "WAVES",
+    label: "Waves"
   }
 ];
 
@@ -88,9 +104,25 @@ export const CurrencyConversionType = {
       symbol: "ZEC",
       label: "ZCash"
     },
+    ETH: {
+      symbol: "ETH",
+      label: "Ethereum"
+    },
+    DASH: {
+      symbol: "DASH",
+      label: "Dash"
+    },
+    XMR: {
+      symbol: "XMR",
+      label: "Monero"
+    },
     FCT: {
       symbol: "FCT",
       label: "Factom"
+    },
+    WAVES: {
+      symbol: "WAVES",
+      label: "Waves"
     }
   }
 };

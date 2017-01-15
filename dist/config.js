@@ -1,6 +1,6 @@
 "use strict";
 var logLevel = {
-    logNetworkEvents: true,
+    logNetworkEvents: false,
     logBlockchainEvents: true,
     logPriceCheckEvents: true,
     logUpdateLoggingEvents: true

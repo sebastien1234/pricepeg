@@ -79,9 +79,9 @@ exports.getFiatExchangeRate = function (usdRate, conversionRate, precision) {
     return exports.getFixedRate(rate, precision);
 };
 exports.getCurrencyData = function (symbol) {
-    for (var i = 0; i < CurrencyConversion_1.CurrencyConversionData.length; i++) {
-        if (CurrencyConversion_1.CurrencyConversionData[i].symbol == symbol)
-            return CurrencyConversion_1.CurrencyConversionData[i];
+    for (var i = 0; i < CurrencyConversion_1.supportedCurrencies.length; i++) {
+        if (CurrencyConversion_1.supportedCurrencies[i].symbol == symbol)
+            return CurrencyConversion_1.supportedCurrencies[i];
     }
     return null;
 };

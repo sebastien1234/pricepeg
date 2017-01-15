@@ -10,7 +10,7 @@ import {
 } from "./data/Utils";
 import config from "./config";
 import FixerFiatDataSource from "./data/FixerFiatDataSource";
-import {CurrencyConversionType, default as CurrencyConversion} from "./data/CurrencyConversion";
+import {CurrencyConversionType, default as CurrencyConversion, supportedCurrencies} from "./data/CurrencyConversion";
 import CryptoConverter from "./data/CryptoConverter";
 import * as Q from "q";
 import ConversionDataSource from "./data/ConversionDataSource";
@@ -45,8 +45,6 @@ interface ConverterCollection {
 }
 
 export default class PricePeg {
-  static supportedCurrencies;
-
   public startTime = null;
   public updateHistory: HistoryLog = [];
   public sysRates: PricePegModel = null;
@@ -58,20 +56,12 @@ export default class PricePeg {
     BTCUSD: CurrencyConversionType.CRYPTO.BTC.symbol + CurrencyConversionType.FIAT.USD.symbol,
     SYSBTC: CurrencyConversionType.CRYPTO.SYS.symbol + CurrencyConversionType.CRYPTO.BTC.symbol,
     ZECBTC: CurrencyConversionType.CRYPTO.ZEC.symbol + CurrencyConversionType.CRYPTO.BTC.symbol,
-    FCTBTC: CurrencyConversionType.CRYPTO.FCT.symbol + CurrencyConversionType.CRYPTO.FCT.symbol
+    ETHBTC: CurrencyConversionType.CRYPTO.ETH.symbol + CurrencyConversionType.CRYPTO.BTC.symbol,
+    DASHBTC: CurrencyConversionType.CRYPTO.DASH.symbol + CurrencyConversionType.CRYPTO.BTC.symbol,
+    XMRBTC: CurrencyConversionType.CRYPTO.XMR.symbol + CurrencyConversionType.CRYPTO.BTC.symbol,
+    FCTBTC: CurrencyConversionType.CRYPTO.FCT.symbol + CurrencyConversionType.CRYPTO.BTC.symbol,
+    WAVESBTC: CurrencyConversionType.CRYPTO.WAVES.symbol + CurrencyConversionType.CRYPTO.BTC.symbol
   };
-
-  //these are conversion keys all representing SYS/type conversion support for this peg
-  private supportedCurrencies = [
-    CurrencyConversionType.FIAT.USD.symbol,
-    CurrencyConversionType.FIAT.EUR.symbol,
-    CurrencyConversionType.FIAT.GBP.symbol,
-    CurrencyConversionType.FIAT.CAD.symbol,
-    CurrencyConversionType.FIAT.CNY.symbol,
-    CurrencyConversionType.CRYPTO.BTC.symbol,
-    CurrencyConversionType.CRYPTO.FCT.symbol,
-    CurrencyConversionType.CRYPTO.SYS.symbol
-  ];
 
   constructor() {
     if (!config.enableLivePegUpdates) {
@@ -96,14 +86,39 @@ export default class PricePeg {
     //ZEC/SYS
     conversion = new CurrencyConversion(CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversionType.CRYPTO.ZEC.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
     this.conversionDataSources[this.conversionKeys.ZECBTC] = new CryptoConverter(conversion,
-      [new ConversionDataSource(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),
-        new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")]);
+      [new ConversionDataSource(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid")/*,
+        new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")*/]);
+
+
+    //ETH/SYS
+    conversion = new CurrencyConversion(CurrencyConversionType.CRYPTO.ETH.symbol, CurrencyConversionType.CRYPTO.ETH.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
+    this.conversionDataSources[this.conversionKeys.ETHBTC] = new CryptoConverter(conversion,
+      [new ConversionDataSource(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ETH", "result.Bid")/*,
+        new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_ETH.last")*/]);
+
+    //DASH/SYS
+    conversion = new CurrencyConversion(CurrencyConversionType.CRYPTO.DASH.symbol, CurrencyConversionType.CRYPTO.DASH.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
+    this.conversionDataSources[this.conversionKeys.DASHBTC] = new CryptoConverter(conversion,
+      [new ConversionDataSource(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-DASH", "result.Bid"),/*
+        new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_DASH.last")*/]);
+
+    //XMR/SYS
+    conversion = new CurrencyConversion(CurrencyConversionType.CRYPTO.XMR.symbol, CurrencyConversionType.CRYPTO.XMR.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
+    this.conversionDataSources[this.conversionKeys.XMRBTC] = new CryptoConverter(conversion,
+      [new ConversionDataSource(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-XMR", "result.Bid")/*,
+        new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_XMR.last")*/]);
 
     //FCT/SYS
     conversion = new CurrencyConversion(CurrencyConversionType.CRYPTO.FCT.symbol, CurrencyConversionType.CRYPTO.FCT.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
     this.conversionDataSources[this.conversionKeys.FCTBTC] = new CryptoConverter(conversion,
-      [new ConversionDataSource(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-FCT", "result.Bid"),
-        new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_FCT.last")]);
+      [new ConversionDataSource(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-FCT", "result.Bid")/*,
+        new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_FCT.last")*/]);
+
+    //WAVES/SYS
+    conversion = new CurrencyConversion(CurrencyConversionType.CRYPTO.WAVES.symbol, CurrencyConversionType.CRYPTO.WAVES.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
+    this.conversionDataSources[this.conversionKeys.WAVESBTC] = new CryptoConverter(conversion,
+      [new ConversionDataSource(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-WAVES", "result.Bid")/*,
+        new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_WAVES.last")*/]);
   }
 
   start = () => {
@@ -233,8 +248,8 @@ export default class PricePeg {
       if (config.enablePegUpdateDebug) {
         this.setPricePeg(newValue, currentValue);
       } else {
-        for(let i = 0; i < this.supportedCurrencies.length; i++) {
-          let currencyKey: string = this.supportedCurrencies[i];
+        for(let i = 0; i < supportedCurrencies.length; i++) {
+          let currencyKey: string = supportedCurrencies[i].symbol;
           let currentConversionRate = this.getRate(currentValue, currencyKey);
           let newConversionRate = this.getRate(newValue, currencyKey);
 
@@ -374,7 +389,7 @@ export default class PricePeg {
   };
 
   convertToPricePeg = (): PricePegModel => {
-    return {
+    const peg = {
       rates: [
         {
           currency: CurrencyConversionType.FIAT.USD.symbol,
@@ -427,26 +442,45 @@ export default class PricePeg {
           "precision": 8
         },
         {
+          "currency": CurrencyConversionType.CRYPTO.ETH.symbol,
+          "rate": getFixedRate(parseFloat(this.conversionDataSources[this.conversionKeys.SYSBTC].getAmountToEqualOne(this.conversionDataSources[this.conversionKeys.ETHBTC].getAveragedExchangeRate()).toString()), 8),
+          "escrowfee": 0.01,
+          "fee": 50,
+          "precision": 8
+        },
+        {
+          "currency": CurrencyConversionType.CRYPTO.DASH.symbol,
+          "rate": getFixedRate(parseFloat(this.conversionDataSources[this.conversionKeys.SYSBTC].getAmountToEqualOne(this.conversionDataSources[this.conversionKeys.DASHBTC].getAveragedExchangeRate()).toString()), 8),
+          "escrowfee": 0.01,
+          "fee": 50,
+          "precision": 8
+        },
+        {
+          "currency": CurrencyConversionType.CRYPTO.XMR.symbol,
+          "rate": getFixedRate(parseFloat(this.conversionDataSources[this.conversionKeys.SYSBTC].getAmountToEqualOne(this.conversionDataSources[this.conversionKeys.XMRBTC].getAveragedExchangeRate()).toString()), 8),
+          "escrowfee": 0.01,
+          "fee": 50,
+          "precision": 8
+        },
+        {
           "currency": CurrencyConversionType.CRYPTO.FCT.symbol,
           "rate": getFixedRate(parseFloat(this.conversionDataSources[this.conversionKeys.SYSBTC].getAmountToEqualOne(this.conversionDataSources[this.conversionKeys.FCTBTC].getAveragedExchangeRate()).toString()), 8),
           "escrowfee": 0.01,
           "fee": 50,
           "precision": 8
+        },
+        {
+          "currency": CurrencyConversionType.CRYPTO.WAVES.symbol,
+          "rate": getFixedRate(parseFloat(this.conversionDataSources[this.conversionKeys.SYSBTC].getAmountToEqualOne(this.conversionDataSources[this.conversionKeys.WAVESBTC].getAveragedExchangeRate()).toString()), 8),
+          "escrowfee": 0.01,
+          "fee": 50,
+          "precision": 8
         }
       ]
-    }
+    };
+
+    console.log("New peg:", JSON.stringify(peg));
+
+    return peg;
   };
 };
-
-PricePeg.supportedCurrencies = [
-  CurrencyConversionType.FIAT.USD.symbol,
-  CurrencyConversionType.FIAT.CAD.symbol,
-  CurrencyConversionType.FIAT.CNY.symbol,
-  CurrencyConversionType.FIAT.GBP.symbol,
-  CurrencyConversionType.FIAT.EUR.symbol,
-  CurrencyConversionType.CRYPTO.BTC.symbol,
-  CurrencyConversionType.CRYPTO.SYS.symbol,
-  CurrencyConversionType.CRYPTO.ZEC.symbol,
-  CurrencyConversionType.CRYPTO.FCT.symbol
-];
-

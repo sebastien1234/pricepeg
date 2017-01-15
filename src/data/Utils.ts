@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as Q from "q";
 import {config} from "../config";
 import {HistoryLog, ConversionDataEntry} from "../index";
-import {CurrencyConversionData} from "./CurrencyConversion";
+import {supportedCurrencies} from "./CurrencyConversion";
 
 export const getDeepValue = (obj: any, path:string) => {
   for (let i=0, pathParts=path.split('.'), len=pathParts.length; i<len; i++){
@@ -94,9 +94,9 @@ export const getFiatExchangeRate = (usdRate, conversionRate, precision) => {
 };
 
 export const getCurrencyData = (symbol: string): ConversionDataEntry => {
-  for(let i = 0; i < CurrencyConversionData.length; i++) {
-    if(CurrencyConversionData[i].symbol == symbol)
-      return CurrencyConversionData[i];
+  for(let i = 0; i < supportedCurrencies.length; i++) {
+    if(supportedCurrencies[i].symbol == symbol)
+      return supportedCurrencies[i];
   }
 
   return null;

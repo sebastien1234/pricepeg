@@ -17,6 +17,60 @@ var CurrencyConversion = (function () {
 }());
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = CurrencyConversion;
+exports.supportedCurrencies = [
+    {
+        symbol: "USD",
+        label: "US Dollar"
+    },
+    {
+        symbol: "GBP",
+        label: "British Pound",
+    },
+    {
+        symbol: "CNY",
+        label: "Chinese Yuan"
+    },
+    {
+        symbol: "EUR",
+        label: "Euro"
+    },
+    {
+        symbol: "CAD",
+        label: "Canada"
+    },
+    {
+        symbol: "BTC",
+        label: "Bitcoin"
+    },
+    {
+        symbol: "SYS",
+        label: "Syscoin"
+    },
+    {
+        symbol: "ZEC",
+        label: "ZCash"
+    },
+    {
+        symbol: "ETH",
+        label: "Ethereum"
+    },
+    {
+        symbol: "DASH",
+        label: "Dash"
+    },
+    {
+        symbol: "XMR",
+        label: "Monero"
+    },
+    {
+        symbol: "FCT",
+        label: "Factom"
+    },
+    {
+        symbol: "WAVES",
+        label: "Waves"
+    }
+];
 exports.CurrencyConversionType = {
     FIAT: {
         USD: {
@@ -53,9 +107,25 @@ exports.CurrencyConversionType = {
             symbol: "ZEC",
             label: "ZCash"
         },
+        ETH: {
+            symbol: "ETH",
+            label: "Ethereum"
+        },
+        DASH: {
+            symbol: "DASH",
+            label: "Dash"
+        },
+        XMR: {
+            symbol: "XMR",
+            label: "Monero"
+        },
         FCT: {
             symbol: "FCT",
             label: "Factom"
+        },
+        WAVES: {
+            symbol: "WAVES",
+            label: "Waves"
         }
     }
 };

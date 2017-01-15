@@ -1,6 +1,7 @@
 import config from "./config";
 import PricePeg from "./PricePeg";
 import {CurrencyConversionType} from "./data/CurrencyConversion";
+import {getCurrencyData} from "./data/Utils";
 
 export const getHistoryPage = (req, res, peg: PricePeg) => {
   const updateTime = (config.updateInterval / 60).toFixed(2).indexOf(".00") == -1 ? (config.updateInterval / 60).toFixed(2) : (config.updateInterval / 60);
@@ -39,19 +40,22 @@ export const getHistoryPage = (req, res, peg: PricePeg) => {
     
     <p class="disclaimer"><b>Disclaimer:</b> The Syscoin Team does its best to ensure the price peg is running properly 24/7/365 and that rates produced by the peg are accurate based on market rates.
     By using the Syscoin Team price peg you acknowledge this and release the team for any liability related to inaccuracies or erroneous peg values.</p>
-    <table style="text-align:center; width: 100%">
-    <tr>`);
+    <div style="text-align: center">`);
   for (let i = 0; i < peg.sysRates.rates.length; i++) {
     let rate = peg.sysRates.rates[i];
     if(rate.currency == CurrencyConversionType.CRYPTO.SYS.symbol)
       continue;
 
     const formattedValue = rate.rate.toString().indexOf(".") == -1 ? rate.rate.toString() : rate.rate.toString().substr(0, rate.rate.toString().indexOf(".") + 2);
-    res.write(`<td style="padding: 10px"><h3><b>${rate.currency}/SYS:</b> ${formattedValue}</h3></td>`);
+    const currencyData = getCurrencyData(rate.currency);
+
+    res.write(`<div style="padding: 10px; display: inline-block; text-align: center; margin: 0 auto">
+                <h3><b>${rate.currency}/SYS:</b> ${formattedValue}</h3>
+                <p style="font-size: 10px; font-style: italic">${formattedValue} Syscoin = 1 ${currencyData.label}</p>
+              </div>`);
   }
 
-  res.write(`</tr>
-    </table>
+  res.write(`</div>
     <hr><h4>Current Raw Value:</h4> 
     <textarea style="width:100%;height:70px">${JSON.stringify(peg.sysRates)}</textarea>
     </div> 

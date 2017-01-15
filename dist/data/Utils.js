@@ -1,6 +1,8 @@
 "use strict";
 var _this = this;
 var fs = require("fs");
+var Q = require("q");
+var config_1 = require("../config");
 exports.getDeepValue = function (obj, path) {
     for (var i = 0, pathParts = path.split('.'), len = pathParts.length; i < len; i++) {
         obj = obj[pathParts[i]];
@@ -23,31 +25,56 @@ exports.logPegMessage = function (msg, includeTimeStamp) {
     if (includeTimeStamp === void 0) { includeTimeStamp = true; }
     msg = includeTimeStamp ? new Date() + " - " + msg : msg;
     console.log(msg);
-    exports.writeToFile("./peg.log", msg + "\n");
+    exports.writeToFile(config_1.config.debugLogFilename, msg + "\n");
 };
 exports.writeToFile = function (filePath, content, append) {
     if (append === void 0) { append = true; }
+    var deferred = Q.defer();
     if (append) {
         fs.appendFile(filePath, content, function (err) {
             if (err) {
-                return console.log("ERROR APPENDING TO PEG LOG: ", JSON.stringify(err));
+                console.log("ERROR WRITING TO FILE " + JSON.stringify(err));
+                deferred.reject(err);
             }
+            deferred.resolve(content);
         });
     }
     else {
         fs.writeFile(filePath, content, function (err) {
             if (err) {
-                return console.log("ERROR WRITING TO PEG LOG: ", JSON.stringify(err));
+                console.log("ERROR WRITING TO FILE  " + JSON.stringify(err));
+                deferred.reject(err);
             }
+            deferred.resolve(content);
         });
     }
+    return deferred.promise;
+};
+exports.readFromFile = function (filePath) {
+    var deferred = Q.defer();
+    fs.readFile(filePath, function (err, data) {
+        if (err) {
+            console.log("ERROR READING FROM FILE  " + JSON.stringify(err));
+            deferred.reject(err);
+        }
+        deferred.resolve(data);
+    });
+    return deferred.promise;
+};
+//super simple test to see if the data in the file is in the right format
+exports.validateUpdateHistoryLogFormat = function (ratesHistory) {
+    if (ratesHistory.length &&
+        typeof ratesHistory[0].date === 'number' &&
+        typeof ratesHistory[0].value === 'object') {
+        return true;
+    }
+    return false;
 };
 exports.logPegMessageNewline = function () {
     _this.logPegMessage("", false);
 };
 exports.getFiatExchangeRate = function (usdRate, conversionRate, precision) {
-    var rate = 0;
-    rate = usdRate / conversionRate;
+    var rate = usdRate / conversionRate;
     return exports.getFixedRate(rate, precision);
 };
 exports.getFixedRate = function (rate, precision) {

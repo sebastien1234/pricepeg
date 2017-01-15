@@ -1,13 +1,22 @@
-import {logPegMessage, logPegMessageNewline, getFixedRate, getFiatExchangeRate, getPercentChange} from "./data/Utils";
-const Q = require('q');
-
-import config from './config';
-import BittrrexDataSource from './data/BittrexDataSource';
-import PoloniexDataSource from './data/PoloniexDataSource';
-import CoinbaseDataSource from './data/CoinbaseDataSource';
-import FixerFiatDataSource from './data/FixerFiatDataSource';
-import {CurrencyConversionType, default as CurrencyConversion} from './data/CurrencyConversion';
+import {
+  logPegMessage,
+  logPegMessageNewline,
+  getFixedRate,
+  getFiatExchangeRate,
+  getPercentChange,
+  readFromFile,
+  validateUpdateHistoryLogFormat,
+  writeToFile
+} from "./data/Utils";
+import config from "./config";
+import BittrrexDataSource from "./data/BittrexDataSource";
+import PoloniexDataSource from "./data/PoloniexDataSource";
+import CoinbaseDataSource from "./data/CoinbaseDataSource";
+import FixerFiatDataSource from "./data/FixerFiatDataSource";
+import {CurrencyConversionType, default as CurrencyConversion} from "./data/CurrencyConversion";
 import CryptoConverter from "./data/CryptoConverter";
+import * as Q from "q";
+
 const syscoin = require('syscoin');
 
 const client = new syscoin.Client({
@@ -33,23 +42,36 @@ const mockPeg: PricePegModel = {
 };
 
 interface ConverterCollection {
-  [ key: string ] : CryptoConverter;
+  [ key: string ]: CryptoConverter;
 }
 
 export default class PricePeg {
 
   public startTime = null;
-  public updateHistory = [];
-  public sysRates = null;
+  public updateHistory: HistoryLog = [];
+  public sysRates: PricePegModel = null;
   public updateInterval = null;
 
   private fiatDataSource = new FixerFiatDataSource("USD", "US Dollar", "http://api.fixer.io/latest?base=USD"); //used to extrapolate other Fiat/SYS pairs off SYS/USD
   private conversionDataSources: ConverterCollection = {};
-  private conversionKeys  = {
+  private conversionKeys = {
     BTCUSD: CurrencyConversionType.CRYPTO.BTC.symbol + CurrencyConversionType.FIAT.USD.symbol,
     SYSBTC: CurrencyConversionType.CRYPTO.SYS.symbol + CurrencyConversionType.CRYPTO.BTC.symbol,
-    ZECBTC: CurrencyConversionType.CRYPTO.ZEC.symbol + CurrencyConversionType.CRYPTO.BTC.symbol
+    ZECBTC: CurrencyConversionType.CRYPTO.ZEC.symbol + CurrencyConversionType.CRYPTO.BTC.symbol,
+    FCTBTC: CurrencyConversionType.CRYPTO.FCT.symbol + CurrencyConversionType.CRYPTO.FCT.symbol
   };
+
+  //these are conversion keys all representing SYS/type conversion support for this peg
+  private supportedCurrencies = [
+    CurrencyConversionType.FIAT.USD.symbol,
+    CurrencyConversionType.FIAT.EUR.symbol,
+    CurrencyConversionType.FIAT.GBP.symbol,
+    CurrencyConversionType.FIAT.CAD.symbol,
+    CurrencyConversionType.FIAT.CNY.symbol,
+    CurrencyConversionType.CRYPTO.BTC.symbol,
+    CurrencyConversionType.CRYPTO.FCT.symbol,
+    CurrencyConversionType.CRYPTO.SYS.symbol
+  ];
 
   constructor() {
     if (!config.enableLivePegUpdates) {
@@ -76,21 +98,46 @@ export default class PricePeg {
     this.conversionDataSources[this.conversionKeys.ZECBTC] = new CryptoConverter(conversion,
       [new BittrrexDataSource(CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversionType.CRYPTO.ZEC.label, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),
         new PoloniexDataSource(CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversionType.CRYPTO.ZEC.label, "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")]);
+
+    //FCT/SYS
+    conversion = new CurrencyConversion(CurrencyConversionType.CRYPTO.FCT.symbol, CurrencyConversionType.CRYPTO.FCT.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
+    this.conversionDataSources[this.conversionKeys.FCTBTC] = new CryptoConverter(conversion,
+      [new BittrrexDataSource(CurrencyConversionType.CRYPTO.FCT.symbol, CurrencyConversionType.CRYPTO.FCT.label, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-FCT", "result.Bid"),
+        new PoloniexDataSource(CurrencyConversionType.CRYPTO.FCT.symbol, CurrencyConversionType.CRYPTO.FCT.label, "https://poloniex.com/public?command=returnTicker", "BTC_FCT.last")]);
   }
 
   start = () => {
-    logPegMessage("Starting PricePeg with config: \n" + JSON.stringify(config));
+    logPegMessage(`Starting PricePeg with config:
+                    ${JSON.stringify(config)}`);
 
-    if(config.enableLivePegUpdates)
+    if (config.enableLivePegUpdates)
       client.getInfo((err, info, resHeaders) => {
         if (err) {
-          return logPegMessage("Error: " + err);
+          return logPegMessage(`Error: ${err}`);
         }
-        logPegMessage('Syscoin Connection Test. Current Blockheight: ' + info.blocks);
+        logPegMessage(`Syscoin Connection Test. Current Blockheight: ${info.blocks}`);
       });
 
     this.startTime = Date.now();
-    this.startUpdateInterval();
+
+
+    //try to load up any previous data
+    this.loadUpdateHistory().then((log) => {
+      let parseLog = JSON.parse(log);
+      if(validateUpdateHistoryLogFormat(parseLog)) {
+        if(config.logLevel.logUpdateLoggingEvents)
+          logPegMessage("Peg update history loaded from file and validated.");
+        this.updateHistory = parseLog;
+      }else{
+        if(config.logLevel.logUpdateLoggingEvents)
+          logPegMessage("Peg update history loaded from file but was INVALID!")
+      }
+
+      this.startUpdateInterval();
+    },
+    (err) => {
+      this.startUpdateInterval();
+    });
   };
 
   stop = () => {
@@ -122,7 +169,7 @@ export default class PricePeg {
   refreshCurrentRates = (checkForPegUpdate) => {
     let dataSources = [];
 
-    for(let key in this.conversionDataSources) {
+    for (let key in this.conversionDataSources) {
       dataSources.push(this.conversionDataSources[key].refreshAverageExchangeRate());
     }
 
@@ -132,9 +179,9 @@ export default class PricePeg {
   };
 
   handleCurrentRateRefreshComplete = (checkForPegUpdate) => {
-    if(config.logLevel.logNetworkEvents) {
+    if (config.logLevel.logNetworkEvents) {
       //any time we fetch crypto rates, fetch the fiat rates too
-      logPegMessage("Exchange rate refresh complete, check for peg value changes == " + checkForPegUpdate);
+      logPegMessage(`Exchange rate refresh complete, check for peg value changes == ${checkForPegUpdate}`);
       logPegMessageNewline();
     }
 
@@ -143,55 +190,86 @@ export default class PricePeg {
     }
   };
 
+  loadUpdateHistory = (): Q.IPromise<string>  => {
+    let deferred = Q.defer();
+    readFromFile(config.updateLogFilename).then((log: string) => {
+      deferred.resolve(log);
+    }, (e) => deferred.reject(e));
+
+
+    return deferred.promise;
+  };
+
+  getRate = (ratesObject: PricePegModel, searchSymbol: string): number => {
+    let rate = null;
+
+    ratesObject.rates.map((rateObj) => {
+      if(rateObj.currency == searchSymbol)
+        rate = rateObj.rate;
+    });
+
+    return rate;
+  };
+
   checkPricePeg = () => {
     let deferred = Q.defer();
 
-    this.getPricePeg().then((currentValue) => {
-      if(config.logLevel.logPriceCheckEvents)
-        logPegMessage("Current peg value: " + JSON.stringify(currentValue));
+    this.getPricePeg().then((currentValue: PricePegModel) => {
+      if (config.logLevel.logPriceCheckEvents)
+        logPegMessage(`Current peg value: ${JSON.stringify(currentValue)}`);
 
       if (this.sysRates == null) {
-        if(config.logLevel.logPriceCheckEvents)
-          logPegMessage("No current value set, setting, setting first result as current value.");
+        if (config.logLevel.logPriceCheckEvents)
+          logPegMessage(`No current value set, setting, setting first result as current value.`);
 
         this.sysRates = currentValue;
       }
 
-      if(config.logLevel.logPriceCheckEvents)
+      if (config.logLevel.logPriceCheckEvents)
         logPegMessageNewline();
 
       let newValue = this.convertToPricePeg();
 
-      if(config.enablePegUpdateDebug) {
+      if (config.enablePegUpdateDebug) {
         this.setPricePeg(newValue, currentValue);
-      }else{
-        let percentChange = getPercentChange(newValue.rates[0].rate, currentValue.rates[0].rate);
+      } else {
+        for(let i = 0; i < this.supportedCurrencies.length; i++) {
+          let currencyKey: string = this.supportedCurrencies[i];
+          let currentConversionRate = this.getRate(currentValue, currencyKey);
+          let newConversionRate = this.getRate(newValue, currencyKey);
 
-        if(config.logLevel.logPriceCheckEvents) {
-          logPegMessage("Checking price. Current v. new = " + currentValue.rates[0].rate + " v. " + newValue.rates[0].rate + " == " + percentChange + "% change");
-          logPegMessageNewline();
-        }
+          if(currentConversionRate == null || newConversionRate == null) {
+            throw new Error(`No such rate: ${currencyKey}`);
+          }
 
-        percentChange = percentChange < 0 ? percentChange * -1 : percentChange; //convert neg percent to positive
+          let percentChange = getPercentChange(newConversionRate, currentConversionRate);
 
-        if (percentChange > (config.updateThresholdPercentage * 100)) {
-          if(config.logLevel.logBlockchainEvents)
-            logPegMessage("Attempting to update price peg.");
+          if (config.logLevel.logPriceCheckEvents) {
+            logPegMessage(`Checking price for ${currencyKey}: Current v. new = ${currentConversionRate}  v. ${newConversionRate} == ${percentChange}% change`);
+            logPegMessageNewline();
+          }
 
-          this.setPricePeg(newValue, currentValue).then((result) => {
-            deferred.resolve(result);
-          });
-        } else {
-          deferred.resolve();
+          percentChange = percentChange < 0 ? percentChange * -1 : percentChange; //convert neg percent to positive
+
+          if (percentChange > (config.updateThresholdPercentage * 100)) {
+            if (config.logLevel.logBlockchainEvents)
+              logPegMessage(`Attempting to update price peg, currency ${currencyKey} changed by ${percentChange}.`);
+
+            this.setPricePeg(newValue, currentValue).then((result) => {
+              deferred.resolve(result);
+            });
+          } else {
+            deferred.resolve();
+          }
         }
       }
 
     })
 
-    .catch((err) => {
-      logPegMessage("ERROR:" + err);
-      deferred.reject(err);
-    });
+      .catch((err) => {
+        logPegMessage("ERROR:" + err);
+        deferred.reject(err);
+      });
 
     return deferred.promise;
   };
@@ -199,12 +277,12 @@ export default class PricePeg {
   getPricePeg = () => {
     let deferred = Q.defer();
 
-    if(!config.enableLivePegUpdates) {
+    if (!config.enableLivePegUpdates) {
       deferred.resolve(mockPeg);
-    }else{
+    } else {
       client.aliasInfo(config.pegalias, (err, aliasinfo, resHeaders) => {
         if (err) {
-          logPegMessage("Error: " + err);
+          logPegMessage(`Error: ${err}`);
           return deferred.reject(err);
         }
 
@@ -227,18 +305,18 @@ export default class PricePeg {
     let currentIntervalStartTime = now - ((config.updatePeriod * 1000) * currentInterval);
 
     let updatesInThisPeriod = 0;
-    if(config.logLevel.logBlockchainEvents)
-      logPegMessage("Attempting to update price peg if within safe parameters.");
+    if (config.logLevel.logBlockchainEvents)
+      logPegMessage(`Attempting to update price peg if within safe parameters.`);
 
     updatesInThisPeriod += this.updateHistory.filter((item) => {
       return item.date > currentIntervalStartTime;
     }).length;
 
     if (updatesInThisPeriod <= config.maxUpdatesPerPeriod) {
-      if(config.enableLivePegUpdates) {
+      if (config.enableLivePegUpdates) {
         client.aliasUpdate(config.pegalias, config.pegalias_aliaspeg, JSON.stringify(newValue), (err, result, resHeaders) => {
           if (err) {
-            logPegMessage("ERROR:" + err);
+            logPegMessage(`ERROR: ${err}`);
             logPegMessageNewline();
             deferred.reject(err);
           } else {
@@ -246,14 +324,14 @@ export default class PricePeg {
             deferred.resolve(result);
           }
         });
-      }else{
+      } else {
         this.logUpdate(newValue, oldValue);
         deferred.resolve(newValue);
       }
     } else {
-      logPegMessage("ERROR - Unable to update peg, max updates of [" + config.maxUpdatesPerPeriod + "] would be exceeded. Not updating peg.");
+      logPegMessage(`ERROR - Unable to update peg, max updates of [${config.maxUpdatesPerPeriod}] would be exceeded. Not updating peg.`);
       logPegMessageNewline();
-      deferred.reject();
+      deferred.reject(null);
     }
 
     return deferred.promise;
@@ -266,10 +344,15 @@ export default class PricePeg {
       value: oldValue
     });
 
+    //write updated history object to file
+    writeToFile(config.updateLogFilename, JSON.stringify(this.updateHistory), false).then((result) => {
+      console.log("Update log history written to successfully");
+    });
+
     this.sysRates = newValue;
 
-    if(config.logLevel.logBlockchainEvents) {
-      logPegMessage("Price peg updated successfully.");
+    if (config.logLevel.logBlockchainEvents) {
+      logPegMessage(`Price peg updated successfully.`);
       logPegMessageNewline();
     }
   };
@@ -331,6 +414,13 @@ export default class PricePeg {
           "precision": 8
         },
         {
+          "currency": CurrencyConversionType.CRYPTO.SYS.symbol,
+          "rate": getFixedRate(1.0, 2),
+          "escrowfee": 0.005,
+          "fee": 1000,
+          "precision": 2
+        },
+        {
           "currency": CurrencyConversionType.CRYPTO.ZEC.symbol,
           "rate": getFixedRate(parseFloat(this.conversionDataSources[this.conversionKeys.SYSBTC].getAmountToEqualOne(this.conversionDataSources[this.conversionKeys.ZECBTC].getAveragedExchangeRate()).toString()), 8),
           "escrowfee": 0.01,
@@ -338,11 +428,11 @@ export default class PricePeg {
           "precision": 8
         },
         {
-          "currency": CurrencyConversionType.CRYPTO.SYS.symbol,
-          "rate": getFixedRate(1.0, 2),
-          "escrowfee": 0.005,
-          "fee": 1000,
-          "precision": 2
+          "currency": CurrencyConversionType.CRYPTO.FCT.symbol,
+          "rate": getFixedRate(parseFloat(this.conversionDataSources[this.conversionKeys.SYSBTC].getAmountToEqualOne(this.conversionDataSources[this.conversionKeys.FCTBTC].getAveragedExchangeRate()).toString()), 8),
+          "escrowfee": 0.01,
+          "fee": 50,
+          "precision": 8
         }
       ]
     }
@@ -360,3 +450,11 @@ interface PricePegEntry {
   escrowfee?: number; // escrow fee % for arbiters on offers that use this peg, defaults to 0.005 (0.05%)
   precision: number; // int
 }
+
+export type HistoryLog = HistoryLogEntry[];
+
+export interface HistoryLogEntry {
+  date: number; //result of Date.now()
+  value: PricePegModel;
+}
+

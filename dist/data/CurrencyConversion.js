@@ -52,6 +52,10 @@ exports.CurrencyConversionType = {
         ZEC: {
             symbol: "ZEC",
             label: "ZCash"
+        },
+        FCT: {
+            symbol: "FCT",
+            label: "Factom"
         }
     }
 };

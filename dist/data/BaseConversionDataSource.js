@@ -1,8 +1,8 @@
 "use strict";
 var Utils_1 = require("./Utils");
 var config_1 = require("../config");
-var rp = require('request-promise');
-var Q = require('q');
+var rp = require("request-promise");
+var Q = require("q");
 var BaseConversionDataSource = (function () {
     function BaseConversionDataSource(baseCurrencySymbol, baseCurrencyLabel, dataUrl, responseDataPath) {
         if (responseDataPath === void 0) { responseDataPath = null; }

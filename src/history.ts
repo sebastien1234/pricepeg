@@ -1,5 +1,6 @@
-import config from './config';
+import config from "./config";
 import PricePeg from "./PricePeg";
+import {CurrencyConversionType} from "./data/CurrencyConversion";
 
 export const getHistoryPage = (req, res, peg: PricePeg) => {
   const updateTime = (config.updateInterval / 60).toFixed(2).indexOf(".00") == -1 ? (config.updateInterval / 60).toFixed(2) : (config.updateInterval / 60);
@@ -40,9 +41,13 @@ export const getHistoryPage = (req, res, peg: PricePeg) => {
     By using the Syscoin Team price peg you acknowledge this and release the team for any liability related to inaccuracies or erroneous peg values.</p>
     <table style="text-align:center; width: 100%">
     <tr>`);
-  for (let i = 0; i < peg.sysRates.rates.length - 1; i++) {
-    const formattedValue = peg.sysRates.rates[i].rate.toString().indexOf(".") == -1 ? peg.sysRates.rates[i].rate.toString() : peg.sysRates.rates[i].rate.toString().substr(0, peg.sysRates.rates[i].rate.toString().indexOf(".") + 2);
-    res.write(`<td style="padding: 10px"><h3><b>${peg.sysRates.rates[i].currency}/SYS:</b> ${formattedValue}</h3></td>`);
+  for (let i = 0; i < peg.sysRates.rates.length; i++) {
+    let rate = peg.sysRates.rates[i];
+    if(rate.currency == CurrencyConversionType.CRYPTO.SYS.symbol)
+      continue;
+
+    const formattedValue = rate.rate.toString().indexOf(".") == -1 ? rate.rate.toString() : rate.rate.toString().substr(0, rate.rate.toString().indexOf(".") + 2);
+    res.write(`<td style="padding: 10px"><h3><b>${rate.currency}/SYS:</b> ${formattedValue}</h3></td>`);
   }
 
   res.write(`</tr>

@@ -1,6 +1,5 @@
 "use strict";
 var Utils_1 = require("./data/Utils");
-var Q = require('q');
 var config_1 = require("./config");
 var BittrexDataSource_1 = require("./data/BittrexDataSource");
 var PoloniexDataSource_1 = require("./data/PoloniexDataSource");
@@ -8,6 +7,7 @@ var CoinbaseDataSource_1 = require("./data/CoinbaseDataSource");
 var FixerFiatDataSource_1 = require("./data/FixerFiatDataSource");
 var CurrencyConversion_1 = require("./data/CurrencyConversion");
 var CryptoConverter_1 = require("./data/CryptoConverter");
+var Q = require("q");
 var syscoin = require('syscoin');
 var client = new syscoin.Client({
     host: config_1.default.rpcserver,
@@ -40,19 +40,46 @@ var PricePeg = (function () {
         this.conversionKeys = {
             BTCUSD: CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol + CurrencyConversion_1.CurrencyConversionType.FIAT.USD.symbol,
             SYSBTC: CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.symbol + CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol,
-            ZECBTC: CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol + CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol
+            ZECBTC: CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol + CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol,
+            FCTBTC: CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.symbol + CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.symbol
         };
+        //these are conversion keys all representing SYS/type conversion support for this peg
+        this.supportedCurrencies = [
+            CurrencyConversion_1.CurrencyConversionType.FIAT.USD.symbol,
+            CurrencyConversion_1.CurrencyConversionType.FIAT.EUR.symbol,
+            CurrencyConversion_1.CurrencyConversionType.FIAT.GBP.symbol,
+            CurrencyConversion_1.CurrencyConversionType.FIAT.CAD.symbol,
+            CurrencyConversion_1.CurrencyConversionType.FIAT.CNY.symbol,
+            CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol,
+            CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.symbol,
+            CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.symbol
+        ];
         this.start = function () {
-            Utils_1.logPegMessage("Starting PricePeg with config: \n" + JSON.stringify(config_1.default));
+            Utils_1.logPegMessage("Starting PricePeg with config:\n                    " + JSON.stringify(config_1.default));
             if (config_1.default.enableLivePegUpdates)
                 client.getInfo(function (err, info, resHeaders) {
                     if (err) {
                         return Utils_1.logPegMessage("Error: " + err);
                     }
-                    Utils_1.logPegMessage('Syscoin Connection Test. Current Blockheight: ' + info.blocks);
+                    Utils_1.logPegMessage("Syscoin Connection Test. Current Blockheight: " + info.blocks);
                 });
             _this.startTime = Date.now();
-            _this.startUpdateInterval();
+            //try to load up any previous data
+            _this.loadUpdateHistory().then(function (log) {
+                var parseLog = JSON.parse(log);
+                if (Utils_1.validateUpdateHistoryLogFormat(parseLog)) {
+                    if (config_1.default.logLevel.logUpdateLoggingEvents)
+                        Utils_1.logPegMessage("Peg update history loaded from file and validated.");
+                    _this.updateHistory = parseLog;
+                }
+                else {
+                    if (config_1.default.logLevel.logUpdateLoggingEvents)
+                        Utils_1.logPegMessage("Peg update history loaded from file but was INVALID!");
+                }
+                _this.startUpdateInterval();
+            }, function (err) {
+                _this.startUpdateInterval();
+            });
         };
         this.stop = function () {
             _this.stopUpdateInterval();
@@ -95,6 +122,21 @@ var PricePeg = (function () {
                 _this.checkPricePeg();
             }
         };
+        this.loadUpdateHistory = function () {
+            var deferred = Q.defer();
+            Utils_1.readFromFile(config_1.default.updateLogFilename).then(function (log) {
+                deferred.resolve(log);
+            }, function (e) { return deferred.reject(e); });
+            return deferred.promise;
+        };
+        this.getRate = function (ratesObject, searchSymbol) {
+            var rate = null;
+            ratesObject.rates.map(function (rateObj) {
+                if (rateObj.currency == searchSymbol)
+                    rate = rateObj.rate;
+            });
+            return rate;
+        };
         this.checkPricePeg = function () {
             var deferred = Q.defer();
             _this.getPricePeg().then(function (currentValue) {
@@ -112,21 +154,29 @@ var PricePeg = (function () {
                     _this.setPricePeg(newValue, currentValue);
                 }
                 else {
-                    var percentChange = Utils_1.getPercentChange(newValue.rates[0].rate, currentValue.rates[0].rate);
-                    if (config_1.default.logLevel.logPriceCheckEvents) {
-                        Utils_1.logPegMessage("Checking price. Current v. new = " + currentValue.rates[0].rate + " v. " + newValue.rates[0].rate + " == " + percentChange + "% change");
-                        Utils_1.logPegMessageNewline();
-                    }
-                    percentChange = percentChange < 0 ? percentChange * -1 : percentChange; //convert neg percent to positive
-                    if (percentChange > (config_1.default.updateThresholdPercentage * 100)) {
-                        if (config_1.default.logLevel.logBlockchainEvents)
-                            Utils_1.logPegMessage("Attempting to update price peg.");
-                        _this.setPricePeg(newValue, currentValue).then(function (result) {
-                            deferred.resolve(result);
-                        });
-                    }
-                    else {
-                        deferred.resolve();
+                    for (var i = 0; i < _this.supportedCurrencies.length; i++) {
+                        var currencyKey = _this.supportedCurrencies[i];
+                        var currentConversionRate = _this.getRate(currentValue, currencyKey);
+                        var newConversionRate = _this.getRate(newValue, currencyKey);
+                        if (currentConversionRate == null || newConversionRate == null) {
+                            throw new Error("No such rate: " + currencyKey);
+                        }
+                        var percentChange = Utils_1.getPercentChange(newConversionRate, currentConversionRate);
+                        if (config_1.default.logLevel.logPriceCheckEvents) {
+                            Utils_1.logPegMessage("Checking price for " + currencyKey + ": Current v. new = " + currentConversionRate + "  v. " + newConversionRate + " == " + percentChange + "% change");
+                            Utils_1.logPegMessageNewline();
+                        }
+                        percentChange = percentChange < 0 ? percentChange * -1 : percentChange; //convert neg percent to positive
+                        if (percentChange > (config_1.default.updateThresholdPercentage * 100)) {
+                            if (config_1.default.logLevel.logBlockchainEvents)
+                                Utils_1.logPegMessage("Attempting to update price peg, currency " + currencyKey + " changed by " + percentChange + ".");
+                            _this.setPricePeg(newValue, currentValue).then(function (result) {
+                                deferred.resolve(result);
+                            });
+                        }
+                        else {
+                            deferred.resolve();
+                        }
                     }
                 }
             })
@@ -170,7 +220,7 @@ var PricePeg = (function () {
                 if (config_1.default.enableLivePegUpdates) {
                     client.aliasUpdate(config_1.default.pegalias, config_1.default.pegalias_aliaspeg, JSON.stringify(newValue), function (err, result, resHeaders) {
                         if (err) {
-                            Utils_1.logPegMessage("ERROR:" + err);
+                            Utils_1.logPegMessage("ERROR: " + err);
                             Utils_1.logPegMessageNewline();
                             deferred.reject(err);
                         }
@@ -188,7 +238,7 @@ var PricePeg = (function () {
             else {
                 Utils_1.logPegMessage("ERROR - Unable to update peg, max updates of [" + config_1.default.maxUpdatesPerPeriod + "] would be exceeded. Not updating peg.");
                 Utils_1.logPegMessageNewline();
-                deferred.reject();
+                deferred.reject(null);
             }
             return deferred.promise;
         };
@@ -197,6 +247,10 @@ var PricePeg = (function () {
             _this.updateHistory.push({
                 date: Date.now(),
                 value: oldValue
+            });
+            //write updated history object to file
+            Utils_1.writeToFile(config_1.default.updateLogFilename, JSON.stringify(_this.updateHistory), false).then(function (result) {
+                console.log("Update log history written to successfully");
             });
             _this.sysRates = newValue;
             if (config_1.default.logLevel.logBlockchainEvents) {
@@ -258,6 +312,13 @@ var PricePeg = (function () {
                         "precision": 8
                     },
                     {
+                        "currency": CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.symbol,
+                        "rate": Utils_1.getFixedRate(1.0, 2),
+                        "escrowfee": 0.005,
+                        "fee": 1000,
+                        "precision": 2
+                    },
+                    {
                         "currency": CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol,
                         "rate": Utils_1.getFixedRate(parseFloat(_this.conversionDataSources[_this.conversionKeys.SYSBTC].getAmountToEqualOne(_this.conversionDataSources[_this.conversionKeys.ZECBTC].getAveragedExchangeRate()).toString()), 8),
                         "escrowfee": 0.01,
@@ -265,11 +326,11 @@ var PricePeg = (function () {
                         "precision": 8
                     },
                     {
-                        "currency": CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.symbol,
-                        "rate": Utils_1.getFixedRate(1.0, 2),
-                        "escrowfee": 0.005,
-                        "fee": 1000,
-                        "precision": 2
+                        "currency": CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.symbol,
+                        "rate": Utils_1.getFixedRate(parseFloat(_this.conversionDataSources[_this.conversionKeys.SYSBTC].getAmountToEqualOne(_this.conversionDataSources[_this.conversionKeys.FCTBTC].getAveragedExchangeRate()).toString()), 8),
+                        "escrowfee": 0.01,
+                        "fee": 50,
+                        "precision": 8
                     }
                 ]
             };
@@ -291,6 +352,10 @@ var PricePeg = (function () {
         conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.label, 1, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1);
         this.conversionDataSources[this.conversionKeys.ZECBTC] = new CryptoConverter_1.default(conversion, [new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.label, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),
             new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.label, "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")]);
+        //FCT/SYS
+        conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.label, 1, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1);
+        this.conversionDataSources[this.conversionKeys.FCTBTC] = new CryptoConverter_1.default(conversion, [new BittrexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.label, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-FCT", "result.Bid"),
+            new PoloniexDataSource_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.label, "https://poloniex.com/public?command=returnTicker", "BTC_FCT.last")]);
     }
     return PricePeg;
 }());

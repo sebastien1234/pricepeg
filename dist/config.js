@@ -2,12 +2,13 @@
 var logLevel = {
     logNetworkEvents: true,
     logBlockchainEvents: true,
-    logPriceCheckEvents: true
+    logPriceCheckEvents: true,
+    logUpdateLoggingEvents: true
 };
 exports.config = {
     maxUpdatesPerPeriod: 6,
     updatePeriod: 60 * 60 * 1,
-    updateThresholdPercentage: 0.05,
+    updateThresholdPercentage: 0.01,
     updateInterval: 10,
     enableLivePegUpdates: true,
     enablePegUpdateDebug: false,
@@ -21,7 +22,9 @@ exports.config = {
     pegalias: "pegtest1",
     pegalias_aliaspeg: "pegtest1",
     httpport: 8080,
-    logLevel: logLevel
+    logLevel: logLevel,
+    debugLogFilename: "peg.log",
+    updateLogFilename: "peg-update-history.log"
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = exports.config;

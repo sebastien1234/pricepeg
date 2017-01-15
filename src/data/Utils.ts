@@ -1,4 +1,7 @@
-import * as fs from 'fs';
+import * as fs from "fs";
+import * as Q from "q";
+import {HistoryLog} from "../PricePeg";
+import {config} from "../config";
 
 export const getDeepValue = (obj: any, path:string) => {
   for (let i=0, pathParts=path.split('.'), len=pathParts.length; i<len; i++){
@@ -25,23 +28,58 @@ export const getHumanDate = (time: number): string => {
 export const logPegMessage = (msg, includeTimeStamp: boolean = true) => {
   msg = includeTimeStamp ? new Date() + " - " + msg  : msg;
   console.log(msg);
-  writeToFile("./peg.log", msg + "\n");
+  writeToFile(config.debugLogFilename, msg + "\n");
 };
 
 export const writeToFile = (filePath: string, content: string, append: boolean = true) => {
+  let deferred = Q.defer();
+
   if(append) {
-    fs.appendFile(filePath, content, function (err) {
+    fs.appendFile(filePath, content, (err) => {
       if (err) {
-        return console.log("ERROR APPENDING TO PEG LOG: ", JSON.stringify(err));
+        console.log(`ERROR WRITING TO FILE ${JSON.stringify(err)}`);
+        deferred.reject(err);
       }
+
+      deferred.resolve(content);
     });
   }else{
-    fs.writeFile(filePath, content, function (err) {
+    fs.writeFile(filePath, content, (err) => {
       if (err) {
-        return console.log("ERROR WRITING TO PEG LOG: ", JSON.stringify(err));
+        console.log(`ERROR WRITING TO FILE  ${JSON.stringify(err)}`);
+        deferred.reject(err);
       }
+
+      deferred.resolve(content);
     });
   }
+
+  return deferred.promise;
+};
+
+export const readFromFile = (filePath: string): Q.IPromise<string> => {
+  let deferred = Q.defer();
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      console.log(`ERROR READING FROM FILE  ${JSON.stringify(err)}`);
+      deferred.reject(err);
+    }
+
+    deferred.resolve(data);
+  });
+
+  return deferred.promise;
+};
+
+//super simple test to see if the data in the file is in the right format
+export const validateUpdateHistoryLogFormat = (ratesHistory: HistoryLog): boolean => {
+  if(ratesHistory.length &&
+    typeof ratesHistory[0].date === 'number' &&
+    typeof ratesHistory[0].value === 'object') {
+      return true;
+  }
+
+  return false;
 };
 
 export const logPegMessageNewline = () => {
@@ -49,9 +87,7 @@ export const logPegMessageNewline = () => {
 };
 
 export const getFiatExchangeRate = (usdRate, conversionRate, precision) => {
-  let rate = 0;
-
-  rate = usdRate / conversionRate;
+  let rate = usdRate / conversionRate;
 
   return getFixedRate(rate, precision);
 };

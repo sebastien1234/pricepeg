@@ -1,8 +1,8 @@
 import CurrencyConversion from "./CurrencyConversion";
 import {logPegMessage} from "./Utils";
 import config from "../config";
-let rp = require('request-promise');
-let Q = require('q');
+import * as rp from "request-promise";
+import * as Q from "q";
 
 export default class BaseConversionDataSource {
 

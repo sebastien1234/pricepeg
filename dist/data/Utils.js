@@ -94,5 +94,6 @@ exports.getPercentChange = function (newRate, oldRate) {
     }
     return 0;
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = exports.getDeepValue;
+exports.numberWithCommas = function (x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};

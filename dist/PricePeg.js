@@ -6,6 +6,7 @@ var CurrencyConversion_1 = require("./data/CurrencyConversion");
 var CryptoConverter_1 = require("./data/CryptoConverter");
 var Q = require("q");
 var ConversionDataSource_1 = require("./data/ConversionDataSource");
+var PoloniexDataSource_1 = require("./data/PoloniexDataSource");
 var syscoin = require('syscoin');
 var client = new syscoin.Client({
     host: config_1.default.rpcserver,
@@ -352,7 +353,6 @@ var PricePeg = (function () {
                     }
                 ]
             };
-            console.log("New peg:", JSON.stringify(peg));
             return peg;
         };
         if (!config_1.default.enableLivePegUpdates) {
@@ -367,36 +367,30 @@ var PricePeg = (function () {
         //SYS/BTC
         conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.SYS.label, 1, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1);
         this.conversionDataSources[this.conversionKeys.SYSBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-SYS", "result.Bid"),
-            new ConversionDataSource_1.default(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_SYS.last")]);
+            new PoloniexDataSource_1.default(conversion, "https://poloniex.com/public?command=returnOrderBook&currencyPair=BTC_SYS&depth=1", "bids")]);
         //ZEC/SYS
         conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.ZEC.label, 1, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1);
-        this.conversionDataSources[this.conversionKeys.ZECBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid") /*,
-              new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_ZEC.last")*/
-        ]);
+        this.conversionDataSources[this.conversionKeys.ZECBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ZEC", "result.Bid"),
+            new PoloniexDataSource_1.default(conversion, "https://poloniex.com/public?command=returnOrderBook&currencyPair=BTC_ZEC&depth=1", "bids")]);
         //ETH/SYS
         conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.ETH.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.ETH.label, 1, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1);
-        this.conversionDataSources[this.conversionKeys.ETHBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ETH", "result.Bid") /*,
-              new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_ETH.last")*/
-        ]);
+        this.conversionDataSources[this.conversionKeys.ETHBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-ETH", "result.Bid"),
+            new PoloniexDataSource_1.default(conversion, "https://poloniex.com/public?command=returnOrderBook&currencyPair=BTC_ETH&depth=1", "bids")]);
         //DASH/SYS
         conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.DASH.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.DASH.label, 1, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1);
         this.conversionDataSources[this.conversionKeys.DASHBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-DASH", "result.Bid"),
-        ]);
+            new PoloniexDataSource_1.default(conversion, "https://poloniex.com/public?command=returnOrderBook&currencyPair=BTC_DASH&depth=1", "bids")]);
         //XMR/SYS
         conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.XMR.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.XMR.label, 1, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1);
-        this.conversionDataSources[this.conversionKeys.XMRBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-XMR", "result.Bid") /*,
-              new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_XMR.last")*/
-        ]);
+        this.conversionDataSources[this.conversionKeys.XMRBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-XMR", "result.Bid"),
+            new PoloniexDataSource_1.default(conversion, "https://poloniex.com/public?command=returnOrderBook&currencyPair=BTC_XMR&depth=1", "bids")]);
         //FCT/SYS
         conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.FCT.label, 1, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1);
-        this.conversionDataSources[this.conversionKeys.FCTBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-FCT", "result.Bid") /*,
-              new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_FCT.last")*/
-        ]);
+        this.conversionDataSources[this.conversionKeys.FCTBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-FCT", "result.Bid"),
+            new PoloniexDataSource_1.default(conversion, "https://poloniex.com/public?command=returnOrderBook&currencyPair=BTC_FCT&depth=1", "bids")]);
         //WAVES/SYS
         conversion = new CurrencyConversion_1.default(CurrencyConversion_1.CurrencyConversionType.CRYPTO.WAVES.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.WAVES.label, 1, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversion_1.CurrencyConversionType.CRYPTO.BTC.label, 1);
-        this.conversionDataSources[this.conversionKeys.WAVESBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-WAVES", "result.Bid") /*,
-              new ConversionDataSource(conversion, "https://poloniex.com/public?command=returnTicker", "BTC_WAVES.last")*/
-        ]);
+        this.conversionDataSources[this.conversionKeys.WAVESBTC] = new CryptoConverter_1.default(conversion, [new ConversionDataSource_1.default(conversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-WAVES", "result.Bid")]);
     }
     return PricePeg;
 }());

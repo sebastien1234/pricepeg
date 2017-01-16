@@ -1,7 +1,7 @@
 import config from "./config";
 import PricePeg from "./PricePeg";
 import {CurrencyConversionType} from "./data/CurrencyConversion";
-import {getCurrencyData} from "./data/Utils";
+import {getCurrencyData, numberWithCommas} from "./data/Utils";
 
 export const getHistoryPage = (req, res, peg: PricePeg) => {
   const updateTime = (config.updateInterval / 60).toFixed(2).indexOf(".00") == -1 ? (config.updateInterval / 60).toFixed(2) : (config.updateInterval / 60);
@@ -32,9 +32,9 @@ export const getHistoryPage = (req, res, peg: PricePeg) => {
     <div style="text-align:center"><img src="syscoin_icon.png" width="200" height="200" style="" /></div>
     <p style="font-size:18px; text-align: center">
     The Syscoin Team price peg uses the "${config.pegalias}" alias on the Syscoin blockchain and is the default price peg for all items being sold on the 
-    Syscoin Decentralized Marketplace. The price peg uses averages SYS/BTC rates from Bittrex and Poloniex, USD/BTC rates from Coinbase, and USD/Fiat rates from Fixer.io. <br><br>
-    The "${config.pegalias}" price peg is updated anytime the SYS/BTC or USD/BTC price moves +/- ${formattedUpdateThreshold}% of the current values stored on the blockchain, this check is performed every ${updateTime} minutes. 
-    The rates below represent the amount of Syscoin it would take to equal 1 unit of the given currencies based on market rates. 
+    Syscoin Decentralized Marketplace. The price peg uses averages rates from Bittrex and Poloniex for each supported cryptocurrency, USD/BTC rates from Coinbase, and USD/Fiat rates from <a href="http://fixer.io">Fixer.io.</a> <br><br>
+    The "${config.pegalias}" price peg is automatically updated when any of the supported currency's exchange rates change by +/- ${formattedUpdateThreshold}% of the current rates stored on the blockchain. This check is performed every ${updateTime} minutes. b
+    
     For more information on how price pegging works in Syscoin please <a href="http://syscoin.org/faqs/price-pegging-work/">see the FAQ.</a><br><br>
     Values in the below are trimmed to 2 decimals. Full value can be seen in history here or on the blockchain. To support the Syscoin team price peg please send SYS to "${config.pegalias}", all funds are used to cover alias update costs.</p>
     
@@ -46,7 +46,7 @@ export const getHistoryPage = (req, res, peg: PricePeg) => {
     if(rate.currency == CurrencyConversionType.CRYPTO.SYS.symbol)
       continue;
 
-    const formattedValue = rate.rate.toString().indexOf(".") == -1 ? rate.rate.toString() : rate.rate.toString().substr(0, rate.rate.toString().indexOf(".") + 2);
+    const formattedValue = rate.rate.toString().indexOf(".") == -1 ? numberWithCommas(rate.rate.toString()) : numberWithCommas(rate.rate.toString().substr(0, rate.rate.toString().indexOf(".") + 3));
     const currencyData = getCurrencyData(rate.currency);
 
     res.write(`<div style="padding: 10px; display: inline-block; text-align: center; margin: 0 auto">
@@ -81,6 +81,9 @@ export const getHistoryPage = (req, res, peg: PricePeg) => {
     </tr>`);
   }
   res.write('</tbody></table></div>');
+
+  res.write(`<div style="text-align: center; font-size: 11px;">Syscoin Price Peg Server ${config.version}</div>`);
+
   res.write('</body></html>');
   res.end();
 };

@@ -24,7 +24,8 @@ exports.config = {
     httpport: 8080,
     logLevel: logLevel,
     debugLogFilename: "peg.log",
-    updateLogFilename: "peg-update-history.log"
+    updateLogFilename: "peg-update-history.log",
+    version: "1.2.1"
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = exports.config;

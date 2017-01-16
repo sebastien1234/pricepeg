@@ -35,7 +35,9 @@ export const config = {
 
   logLevel: logLevel,
   debugLogFilename: "peg.log",
-  updateLogFilename: "peg-update-history.log"
+  updateLogFilename: "peg-update-history.log",
+
+  version: "1.2.1"
 };
 
 export default config;

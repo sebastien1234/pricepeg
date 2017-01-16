@@ -113,4 +113,7 @@ export const getPercentChange = (newRate, oldRate) => {
   return 0;
 };
 
-export default getDeepValue;
+export const numberWithCommas = (x): string => {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+

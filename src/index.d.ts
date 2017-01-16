@@ -26,7 +26,7 @@ export interface CurrencyConfig {
   precision?: number;
 }
 
-export interface ConversionDataEntry {
+export interface CurrencyData {
   symbol: string;
   label: string;
 }

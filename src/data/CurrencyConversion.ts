@@ -1,4 +1,4 @@
-import {ConversionDataEntry} from "../index";
+import {CurrencyData} from "../index";
 export default class CurrencyConversion {
 
   public toCurrencyAmount: number;
@@ -13,7 +13,7 @@ export default class CurrencyConversion {
   }
 }
 
-export const supportedCurrencies: ConversionDataEntry[] = [
+export const supportedCurrencies: CurrencyData[] = [
   {
     symbol: "USD",
     label: "US Dollar"

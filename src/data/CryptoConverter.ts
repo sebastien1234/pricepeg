@@ -1,13 +1,12 @@
 import CurrencyConversion from "./CurrencyConversion";
 import BaseConversionDataSource from "./BaseConversionDataSource";
-import * as Q from 'q';
-import {config} from "../config";
+import * as Q from "q";
 
 export default class CryptoConverter {
 
   private key:string;
 
-  constructor(public currentConversion:CurrencyConversion, public dataSources: BaseConversionDataSource[]) {
+  constructor(public currentConversion:CurrencyConversion, public dataSources: BaseConversionDataSource[], public fee: number = null, public escrowFee: number = null, public precision: number = null) {
     this.key = currentConversion.fromCurrencySymbol + currentConversion.toCurrencySymbol;
   }
 

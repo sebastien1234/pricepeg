@@ -97,3 +97,7 @@ exports.getPercentChange = function (newRate, oldRate) {
 exports.numberWithCommas = function (x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
+exports.DATA_SOURCE = {
+    POLONIEX: "poloniex",
+    BITTREX: "bittrex"
+};

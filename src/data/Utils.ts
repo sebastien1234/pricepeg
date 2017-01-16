@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as Q from "q";
 import {config} from "../config";
-import {HistoryLog, ConversionDataEntry} from "../index";
+import {HistoryLog, CurrencyData} from "../index";
 import {supportedCurrencies} from "./CurrencyConversion";
 
 export const getDeepValue = (obj: any, path:string) => {
@@ -93,7 +93,7 @@ export const getFiatExchangeRate = (usdRate, conversionRate, precision) => {
   return getFixedRate(rate, precision);
 };
 
-export const getCurrencyData = (symbol: string): ConversionDataEntry => {
+export const getCurrencyData = (symbol: string): CurrencyData => {
   for(let i = 0; i < supportedCurrencies.length; i++) {
     if(supportedCurrencies[i].symbol == symbol)
       return supportedCurrencies[i];
@@ -116,4 +116,10 @@ export const getPercentChange = (newRate, oldRate) => {
 export const numberWithCommas = (x): string => {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
+
+export const DATA_SOURCE = {
+  POLONIEX: "poloniex",
+  BITTREX: "bittrex"
+};
+
 

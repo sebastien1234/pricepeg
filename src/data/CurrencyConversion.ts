@@ -1,4 +1,3 @@
-import {CurrencyData} from "../index";
 export default class CurrencyConversion {
 
   public toCurrencyAmount: number;
@@ -12,61 +11,6 @@ export default class CurrencyConversion {
     this.toCurrencyAmount = parseFloat(toCurrencyAmount.toString()); //force to number type
   }
 }
-
-export const supportedCurrencies: CurrencyData[] = [
-  {
-    symbol: "USD",
-    label: "US Dollar"
-  },
-  {
-    symbol: "GBP",
-    label: "British Pound",
-  },
-  {
-    symbol: "CNY",
-    label: "Chinese Yuan"
-  },
-  {
-    symbol: "EUR",
-    label: "Euro"
-  },
-  {
-    symbol: "CAD",
-    label: "Canada"
-  },
-  {
-    symbol: "BTC",
-    label: "Bitcoin"
-  },
-  {
-    symbol: "SYS",
-    label: "Syscoin"
-  },
-  {
-    symbol: "ZEC",
-    label: "ZCash"
-  },
-  {
-    symbol: "ETH",
-    label: "Ethereum"
-  },
-  {
-    symbol: "DASH",
-    label: "Dash"
-  },
-  {
-    symbol: "XMR",
-    label: "Monero"
-  },
-  {
-    symbol: "FCT",
-    label: "Factom"
-  },
-  {
-    symbol: "WAVES",
-    label: "Waves"
-  }
-];
 
 export const CurrencyConversionType = {
   FIAT: {

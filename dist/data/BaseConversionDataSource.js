@@ -32,7 +32,7 @@ var BaseConversionDataSource = (function () {
             })
                 .catch(function (err) {
                 Utils_1.logPegMessage("Error requesting data for " + _this.dataUrl + " ,err: " + JSON.stringify(err));
-                deferred.reject(err);
+                deferred.reject("Error requesting data for " + _this.dataUrl + " ,err: " + JSON.stringify(err));
             });
             return deferred.promise;
         };

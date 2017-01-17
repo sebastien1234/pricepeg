@@ -1,8 +1,7 @@
 import * as fs from "fs";
 import * as Q from "q";
 import {config} from "../config";
-import {HistoryLog, CurrencyData} from "../index";
-import {supportedCurrencies} from "./CurrencyConversion";
+import {HistoryLog, CurrencyData, supportedCurrencies} from "../common";
 
 export const getDeepValue = (obj: any, path:string) => {
   for (let i=0, pathParts=path.split('.'), len=pathParts.length; i<len; i++){

@@ -3,7 +3,7 @@ var _this = this;
 var fs = require("fs");
 var Q = require("q");
 var config_1 = require("../config");
-var CurrencyConversion_1 = require("./CurrencyConversion");
+var common_1 = require("../common");
 exports.getDeepValue = function (obj, path) {
     for (var i = 0, pathParts = path.split('.'), len = pathParts.length; i < len; i++) {
         obj = obj[pathParts[i]];
@@ -79,9 +79,9 @@ exports.getFiatExchangeRate = function (usdRate, conversionRate, precision) {
     return exports.getFixedRate(rate, precision);
 };
 exports.getCurrencyData = function (symbol) {
-    for (var i = 0; i < CurrencyConversion_1.supportedCurrencies.length; i++) {
-        if (CurrencyConversion_1.supportedCurrencies[i].symbol == symbol)
-            return CurrencyConversion_1.supportedCurrencies[i];
+    for (var i = 0; i < common_1.supportedCurrencies.length; i++) {
+        if (common_1.supportedCurrencies[i].symbol == symbol)
+            return common_1.supportedCurrencies[i];
     }
     return null;
 };

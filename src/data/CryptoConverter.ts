@@ -1,9 +1,11 @@
 import CurrencyConversion, {CurrencyConversionType} from "./CurrencyConversion";
 import BaseConversionDataSource from "./BaseConversionDataSource";
 import * as Q from "q";
-import {CurrencyConfig, PricePegEntry} from "../index";
-import {getFixedRate} from "./Utils";
+import {CurrencyConfig, PricePegEntry} from "../common";
+import {getFixedRate, getFiatExchangeRate} from "./Utils";
 import {config} from "../config";
+import FixerFiatDataSource from "./FixerFiatDataSource";
+import {conversionKeys} from "../PricePeg";
 
 export default class CryptoConverter {
 
@@ -54,10 +56,20 @@ export default class CryptoConverter {
     return one;
   };
 
-  getSYSPegFormat = (conversionDataSources: CryptoConverter[]): PricePegEntry => {
+  getPegCurrency = () => {
+    let currency = this.currencyConversion.fromCurrencySymbol;
+
+    //if fiat then use the to currency symbol
+    if( (this.currencyConfig && this.currencyConfig.isFiat) || (this.currencyConfig == null && this.currencyConversion.fromCurrencySymbol == CurrencyConversionType.CRYPTO.BTC.symbol))
+      currency = this.currencyConversion.toCurrencySymbol;
+
+    return currency;
+  };
+
+  getSYSPegFormat = (conversionDataSources: CryptoConverter[], fiatDatSource: FixerFiatDataSource): PricePegEntry => {
     let pegEntry: PricePegEntry = {
-      currency: this.currencyConversion.fromCurrencySymbol,
-      rate: this.getCalculatedExchangeRate(conversionDataSources),
+      currency: this.getPegCurrency(),
+      rate: this.getCalculatedExchangeRate(conversionDataSources, fiatDatSource),
       precision: this.currencyConfig.precision ? this.currencyConfig.precision : 2
     };
 
@@ -70,15 +82,32 @@ export default class CryptoConverter {
     return pegEntry;
   };
 
-  getCalculatedExchangeRate = (conversionDataSources: CryptoConverter[]): number => {
+  getCalculatedExchangeRate = (conversionDataSources: CryptoConverter[], fiatDataSource): number => {
     let exchangedRate = 1;
-    switch(this.currencyConversion.fromCurrencySymbol) {
-      case CurrencyConversionType.FIAT.USD.symbol:
-          exchangedRate = getFixedRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol, conversionDataSources), 2);
+    let precision = this.currencyConfig ? this.currencyConfig.precision : 2;
+    switch(this.key) {
+      case CurrencyConversionType.CRYPTO.BTC.symbol + CurrencyConversionType.FIAT.USD.symbol:
+          exchangedRate = getFixedRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol, conversionDataSources), precision);
+        break;
+
+      case CurrencyConversionType.CRYPTO.BTC.symbol + CurrencyConversionType.FIAT.CAD.symbol:
+        exchangedRate = getFiatExchangeRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol, conversionDataSources), fiatDataSource.formattedCurrencyConversionData.CAD, precision);
+        break;
+
+      case CurrencyConversionType.CRYPTO.SYS.symbol + CurrencyConversionType.CRYPTO.BTC.symbol:
+        exchangedRate = getFixedRate(1 / conversionDataSources[this.key].getAveragedExchangeRate(), this.currencyConfig.precision);
+        break;
+
+      case CurrencyConversionType.CRYPTO.ZEC.symbol + CurrencyConversionType.CRYPTO.BTC.symbol:
+        exchangedRate = getFixedRate(parseFloat(conversionDataSources[conversionKeys.SYSBTC].getAmountToEqualOne(conversionDataSources[this.key].getAveragedExchangeRate()).toString()), precision);
+        break;
+
+      case CurrencyConversionType.CRYPTO.SYS.symbol + CurrencyConversionType.CRYPTO.SYS.symbol:
+        exchangedRate = 1;
         break;
 
       default:
-          throw new Error("No currency config defined for getCalculatedExchangeRate or not found- " + this.currencyConversion.fromCurrencySymbol);
+          throw new Error("No currency config defined for getCalculatedExchangeRate or not found- " + this.key);
     }
 
     return exchangedRate;

@@ -1,7 +1,7 @@
 import * as Q from "q";
 import {readFromFile, getCurrencyData, DATA_SOURCE} from "./data/Utils";
-import {CurrencyConfig, CurrencyData} from "./index";
-import CurrencyConversion, {supportedCurrencies, CurrencyConversionType} from "./data/CurrencyConversion";
+import {CurrencyConfig, CurrencyData, supportedCurrencies} from "./common";
+import CurrencyConversion, {CurrencyConversionType} from "./data/CurrencyConversion";
 import CryptoConverter from "./data/CryptoConverter";
 import ConversionDataSource from "./data/ConversionDataSource";
 import BaseConversionDataSource from "./data/BaseConversionDataSource";
@@ -14,8 +14,15 @@ export default class SetupWizard {
   public setup = (configJsonFilePath: string) => {
     let deferred = Q.defer();
 
+    console.log("init");
     readFromFile(configJsonFilePath).then((contents) => {
-      let currencyConfig = JSON.parse(contents);
+      let currencyConfig;
+      try {
+        currencyConfig = JSON.parse(contents);
+      }catch(e) {
+        console.error("Error parsing JSON from config:", JSON.stringify(e));
+      }
+
       if(this.validateCurrencyConfig(currencyConfig)) {
         console.log("VALID CONFIG.");
         deferred.resolve(this.generatePegDataSourceObject(currencyConfig));
@@ -38,7 +45,15 @@ export default class SetupWizard {
       for(let i = 0; i < configObj.length; i++) {
         let configEntry = configObj[i];
         console.log("Validating: ", JSON.stringify(configEntry));
-        if(supportedCurrencies.filter(currencyData => { return configEntry.currencySymbol == currencyData.symbol }).length == 0) {
+        let currencySupported = false;
+        for(let x = 0; x < supportedCurrencies.length; x++) {
+          if(supportedCurrencies[x].symbol == configEntry.currencySymbol) {
+            currencySupported = true;
+            break;
+          }
+        }
+
+        if(!currencySupported) {
           this.invalidConfigError(`Unsupported currency symbol: ${configEntry.currencySymbol}`);
           return false;
         }
@@ -48,11 +63,18 @@ export default class SetupWizard {
           return false;
         }
 
-        let dataSourcesArr = configEntry.dataSources.split(",");
-        for(let x = 0; x < dataSourcesArr.length; x++) {
-          let value = dataSourcesArr[x].trim().toLowerCase();
-          if(value != DATA_SOURCE.BITTREX && value != DATA_SOURCE.POLONIEX) {
-            this.invalidConfigError(`Only data sources of ${DATA_SOURCE.BITTREX} or ${DATA_SOURCE.POLONIEX} are supported - ${value} is invalid.`);
+        if(!configEntry.isFiat && configEntry.currencySymbol != CurrencyConversionType.CRYPTO.SYS.symbol) {
+          if(configEntry.dataSources) {
+            let dataSourcesArr = configEntry.dataSources.split(",");
+            for (let x = 0; x < dataSourcesArr.length; x++) {
+              let value = dataSourcesArr[x].trim().toLowerCase();
+              if (value != DATA_SOURCE.BITTREX && value != DATA_SOURCE.POLONIEX) {
+                this.invalidConfigError(`Only data sources of ${DATA_SOURCE.BITTREX} or ${DATA_SOURCE.POLONIEX} are supported - ${value} is invalid.`);
+                return false;
+              }
+            }
+          }else{
+            this.invalidConfigError(`Datasources must be specified for non-fiat currencies. No datasources found for ${configEntry.currencySymbol}`);
             return false;
           }
         }
@@ -116,15 +138,19 @@ export default class SetupWizard {
       let currencyData:CurrencyData = getCurrencyData(configEntry.currencySymbol);
 
       if(configEntry.isFiat) {  //fiat currencies are always calculated from BTC to the fist currency
-
         currencyConversion = new CurrencyConversion(CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1, currencyData.symbol, currencyData.label, 1);
         let coinbaseDataSource = new ConversionDataSource(currencyConversion, "https://coinbase.com/api/v1/currencies/exchange_rates", "btc_to_usd");
         let dataSourcesArr = currencyData.symbol == CurrencyConversionType.FIAT.USD.symbol ? [coinbaseDataSource] : [];
         currencyConversionDataSources.push(new CryptoConverter(currencyConversion, dataSourcesArr, configEntry));
       }else{
-        //cryptocurrencies always are converted to BTC, and converter will handle the final conversion to SYS
-        currencyConversion = new CurrencyConversion(currencyData.symbol, currencyData.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
-        currencyConversionDataSources.push(new CryptoConverter(currencyConversion, this.getDataSourcesFromConfig(configEntry.dataSources, currencyConversion), configEntry));
+        if(configEntry.currencySymbol != CurrencyConversionType.CRYPTO.SYS.symbol) {
+          //cryptocurrencies always are converted to BTC, and converter will handle the final conversion to SYS
+          currencyConversion = new CurrencyConversion(currencyData.symbol, currencyData.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
+          currencyConversionDataSources.push(new CryptoConverter(currencyConversion, this.getDataSourcesFromConfig(configEntry.dataSources, currencyConversion), configEntry));
+        }else{
+          currencyConversion = new CurrencyConversion(currencyData.symbol, currencyData.label, 1, CurrencyConversionType.CRYPTO.SYS.symbol, CurrencyConversionType.CRYPTO.SYS.label, 1);
+          currencyConversionDataSources.push(new CryptoConverter(currencyConversion, [], configEntry));
+        }
       }
     }
 

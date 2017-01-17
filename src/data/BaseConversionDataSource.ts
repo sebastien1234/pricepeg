@@ -42,7 +42,7 @@ export default class BaseConversionDataSource {
     })
     .catch((err) => { // if rp.get rejects (e.g. 500), do this:
       logPegMessage("Error requesting data for " + this.dataUrl + " ,err: " + JSON.stringify(err));
-      deferred.reject(err);
+      deferred.reject("Error requesting data for " + this.dataUrl + " ,err: " + JSON.stringify(err));
     });
 
     return deferred.promise;

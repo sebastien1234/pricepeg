@@ -18,10 +18,10 @@ export default class SetupWizard {
       let currencyConfig = JSON.parse(contents);
       if(this.validateCurrencyConfig(currencyConfig)) {
         console.log("VALID CONFIG.");
-        this.generatePegDataSourceObject(currencyConfig);
-        deferred.resolve(JSON.parse(contents));
+        deferred.resolve(this.generatePegDataSourceObject(currencyConfig));
       }else{
         console.log("INVALID CONFIG.");
+        deferred.reject("INVALID CONFIG.")
       }
     },
     (err) => {
@@ -38,7 +38,7 @@ export default class SetupWizard {
       for(let i = 0; i < configObj.length; i++) {
         let configEntry = configObj[i];
         console.log("Validating: ", JSON.stringify(configEntry));
-        if(supportedCurrencies.filter(currencyData => { configEntry.currencySymbol == currencyData.symbol }).length == 0) {
+        if(supportedCurrencies.filter(currencyData => { return configEntry.currencySymbol == currencyData.symbol }).length == 0) {
           this.invalidConfigError(`Unsupported currency symbol: ${configEntry.currencySymbol}`);
           return false;
         }
@@ -107,27 +107,28 @@ export default class SetupWizard {
   };
 
   generatePegDataSourceObject = (config: CurrencyConfig[]) => {
-    let pegDataSourceArr= [];
+    let currencyConversionDataSources: CryptoConverter[] = [];
     for(let i = 0; i < config.length; i ++) {
       let configEntry = config[i];
-      let dataSourcesArr = configEntry.dataSources.split(",");
 
       //first build conversion object;
       let currencyConversion: CurrencyConversion;
-      let currencyConversionDataSources: CryptoConverter[];
       let currencyData:CurrencyData = getCurrencyData(configEntry.currencySymbol);
 
       if(configEntry.isFiat) {  //fiat currencies are always calculated from BTC to the fist currency
+
         currencyConversion = new CurrencyConversion(CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1, currencyData.symbol, currencyData.label, 1);
         let coinbaseDataSource = new ConversionDataSource(currencyConversion, "https://coinbase.com/api/v1/currencies/exchange_rates", "btc_to_usd");
-        currencyConversionDataSources.push(new CryptoConverter(currencyConversion, [coinbaseDataSource]));
+        let dataSourcesArr = currencyData.symbol == CurrencyConversionType.FIAT.USD.symbol ? [coinbaseDataSource] : [];
+        currencyConversionDataSources.push(new CryptoConverter(currencyConversion, dataSourcesArr, configEntry));
       }else{
         //cryptocurrencies always are converted to BTC, and converter will handle the final conversion to SYS
         currencyConversion = new CurrencyConversion(currencyData.symbol, currencyData.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
-        currencyConversionDataSources.push(new CryptoConverter(currencyConversion, this.getDataSourcesFromConfig(configEntry.dataSources, currencyConversion) ));
+        currencyConversionDataSources.push(new CryptoConverter(currencyConversion, this.getDataSourcesFromConfig(configEntry.dataSources, currencyConversion), configEntry));
       }
     }
 
+    return currencyConversionDataSources;
   };
 
 }

@@ -34,7 +34,7 @@ exports.writeToFile = function (filePath, content, append) {
     if (append) {
         fs.appendFile(filePath, content, function (err) {
             if (err) {
-                console.log("ERROR WRITING TO FILE " + JSON.stringify(err));
+                exports.logPegMessage("ERROR WRITING TO FILE " + JSON.stringify(err));
                 deferred.reject(err);
             }
             deferred.resolve(content);
@@ -43,7 +43,7 @@ exports.writeToFile = function (filePath, content, append) {
     else {
         fs.writeFile(filePath, content, function (err) {
             if (err) {
-                console.log("ERROR WRITING TO FILE  " + JSON.stringify(err));
+                exports.logPegMessage("ERROR WRITING TO FILE  " + JSON.stringify(err));
                 deferred.reject(err);
             }
             deferred.resolve(content);
@@ -55,7 +55,7 @@ exports.readFromFile = function (filePath) {
     var deferred = Q.defer();
     fs.readFile(filePath, "utf-8", function (err, data) {
         if (err) {
-            console.log("ERROR READING FROM FILE  " + JSON.stringify(err));
+            exports.logPegMessage("ERROR READING FROM FILE  " + JSON.stringify(err));
             deferred.reject(err);
         }
         deferred.resolve(data);

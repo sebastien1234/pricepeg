@@ -177,12 +177,13 @@ export default class PricePeg {
   };
 
   getRate = (ratesObject: PricePegModel, searchSymbol: string): number => {
-    let rate = null;
+    let rate = 0;
 
-    ratesObject.rates.map((rateObj) => {
+    for(let i = 0; i < ratesObject.rates.length; i++) {
+      let rateObj = ratesObject.rates[i];
       if(rateObj.currency == searchSymbol)
-        rate = rateObj.rate;
-    });
+          rate = rateObj.rate;
+    }
 
     return rate;
   };
@@ -248,12 +249,10 @@ export default class PricePeg {
 
                 //find the new entries and update them
                 for(let i = 0; i < newValue.rates.length; i++)  {
-                  if(newValue.rates[i].rate == null) {
+                  if(newValue.rates[i].rate == null || isNaN(newValue.rates[i].rate)) {
                     newValue.rates[i].rate = 0;
                   }
                 }
-
-                console.log("Update newvale:", JSON.stringify(newValue));
 
                 this.setPricePeg(newValue, currentValue).then((result) => {
                   deferred.resolve(result);
@@ -346,7 +345,8 @@ export default class PricePeg {
 
     //write updated history object to file
     writeToFile(config.updateLogFilename, JSON.stringify(this.updateHistory), false).then((result) => {
-      console.log("Update log history written to successfully");
+      if(config.logLevel.logUpdateLoggingEvents)
+        logPegMessage("Update log history written to successfully");
     });
 
     this.sysRates = newValue;
@@ -455,7 +455,7 @@ export default class PricePeg {
     //  ]
     //};
 
-    console.log("New peg:", JSON.stringify(peg));
+    //console.log("New peg:", JSON.stringify(peg));
 
     return peg;
   };

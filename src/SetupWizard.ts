@@ -1,10 +1,11 @@
 import * as Q from "q";
-import {readFromFile, getCurrencyData, DATA_SOURCE} from "./data/Utils";
+import {readFromFile, getCurrencyData, DATA_SOURCE, logPegMessage} from "./data/Utils";
 import {CurrencyConfig, CurrencyData, supportedCurrencies} from "./common";
 import CurrencyConversion, {CurrencyConversionType} from "./data/CurrencyConversion";
 import CryptoConverter from "./data/CryptoConverter";
 import ConversionDataSource from "./data/ConversionDataSource";
 import BaseConversionDataSource from "./data/BaseConversionDataSource";
+import PoloniexDataSource from "./data/PoloniexDataSource";
 
 export default class SetupWizard {
   constructor() {
@@ -14,25 +15,24 @@ export default class SetupWizard {
   public setup = (configJsonFilePath: string) => {
     let deferred = Q.defer();
 
-    console.log("init");
     readFromFile(configJsonFilePath).then((contents) => {
       let currencyConfig;
       try {
         currencyConfig = JSON.parse(contents);
       }catch(e) {
-        console.error("Error parsing JSON from config:", JSON.stringify(e));
+        logPegMessage("ERROR: Error parsing JSON from config: " + JSON.stringify(e));
       }
 
       if(this.validateCurrencyConfig(currencyConfig)) {
-        console.log("VALID CONFIG.");
+        logPegMessage("VALID CONFIG.");
         deferred.resolve(this.generatePegDataSourceObject(currencyConfig));
       }else{
-        console.log("INVALID CONFIG.");
+        logPegMessage("INVALID CONFIG.");
         deferred.reject("INVALID CONFIG.")
       }
     },
     (err) => {
-      console.log("Error reading currency config file!");
+      logPegMessage(`Error reading currency config file! ${JSON.stringify(err)}`);
       deferred.reject(err);
     });
 
@@ -41,10 +41,8 @@ export default class SetupWizard {
 
   validateCurrencyConfig = (configObj: CurrencyConfig[] ): boolean => {
     if(configObj && configObj.length) {
-      console.log("validating " + configObj.length + " configs");
       for(let i = 0; i < configObj.length; i++) {
         let configEntry = configObj[i];
-        console.log("Validating: ", JSON.stringify(configEntry));
         let currencySupported = false;
         for(let x = 0; x < supportedCurrencies.length; x++) {
           if(supportedCurrencies[x].symbol == configEntry.currencySymbol) {
@@ -107,20 +105,20 @@ export default class SetupWizard {
   };
 
   invalidConfigError = (reason: string) => {
-    console.error(`Invalid currencies.conf file, details: ${reason}`);
+    logPegMessage(`ERROR: Invalid currencies.conf file, details: ${reason}`);
   };
 
   getDataSourcesFromConfig = (dataSourceConfigStr: string, currencyConversion: CurrencyConversion): BaseConversionDataSource[] => {
     let dataSourcesArr = dataSourceConfigStr.split(",");
     let conversionDataSources: BaseConversionDataSource[] = [];
     for(let i = 0; i < dataSourcesArr.length; i++) {
-      switch(dataSourcesArr[i]) {
+      switch(dataSourcesArr[i].toLowerCase()) {
         case DATA_SOURCE.BITTREX:
-          conversionDataSources.push(new ConversionDataSource(currencyConversion, "", ""));
+          conversionDataSources.push(new ConversionDataSource(currencyConversion, "https://bittrex.com/api/v1.1/public/getticker?market=BTC-" + currencyConversion.fromCurrencySymbol, "result.Bid"));
           break;
 
         case DATA_SOURCE.POLONIEX:
-          conversionDataSources.push(new ConversionDataSource(currencyConversion, "", ""));
+          conversionDataSources.push(new PoloniexDataSource(currencyConversion, "https://poloniex.com/public?command=returnOrderBook&currencyPair=BTC_" + currencyConversion.fromCurrencySymbol + "&depth=1", "bids"));
           break;
       }
     }
@@ -144,10 +142,17 @@ export default class SetupWizard {
         currencyConversionDataSources.push(new CryptoConverter(currencyConversion, dataSourcesArr, configEntry));
       }else{
         if(configEntry.currencySymbol != CurrencyConversionType.CRYPTO.SYS.symbol) {
-          //cryptocurrencies always are converted to BTC, and converter will handle the final conversion to SYS
-          currencyConversion = new CurrencyConversion(currencyData.symbol, currencyData.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
-          currencyConversionDataSources.push(new CryptoConverter(currencyConversion, this.getDataSourcesFromConfig(configEntry.dataSources, currencyConversion), configEntry));
+          if(configEntry.currencySymbol == CurrencyConversionType.CRYPTO.BTC.symbol) {
+            //if the conversion is to BTC the currencyConversion object needs to be from SYS to BTC
+            currencyConversion = new CurrencyConversion(CurrencyConversionType.CRYPTO.SYS.symbol, CurrencyConversionType.CRYPTO.SYS.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
+            currencyConversionDataSources.push(new CryptoConverter(currencyConversion, this.getDataSourcesFromConfig(configEntry.dataSources, currencyConversion), configEntry));
+          }else{
+            //cryptocurrencies always are converted to BTC, and converter will handle the final conversion to SYS
+            currencyConversion = new CurrencyConversion(currencyData.symbol, currencyData.label, 1, CurrencyConversionType.CRYPTO.BTC.symbol, CurrencyConversionType.CRYPTO.BTC.label, 1);
+            currencyConversionDataSources.push(new CryptoConverter(currencyConversion, this.getDataSourcesFromConfig(configEntry.dataSources, currencyConversion), configEntry));
+          }
         }else{
+          //if the conversion is to SYS its 1:1
           currencyConversion = new CurrencyConversion(currencyData.symbol, currencyData.label, 1, CurrencyConversionType.CRYPTO.SYS.symbol, CurrencyConversionType.CRYPTO.SYS.label, 1);
           currencyConversionDataSources.push(new CryptoConverter(currencyConversion, [], configEntry));
         }

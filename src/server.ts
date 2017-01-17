@@ -3,6 +3,7 @@ import PricePeg from "./PricePeg";
 import history from "./history";
 import SetupWizard from "./SetupWizard";
 import CryptoConverter from "./data/CryptoConverter";
+import {logPegMessage} from "./data/Utils";
 
 let express = require('express'),
   app = express(),
@@ -11,7 +12,7 @@ let express = require('express'),
 
 let setupWizard = new SetupWizard();
 setupWizard.setup("./currency.conf").then((configData:CryptoConverter[]) => {
-  console.log("TRY TO START PEG.");
+  logPegMessage("TRY TO START PEG.");
   let peg = new PricePeg(configData);
   peg.start();
 
@@ -24,6 +25,6 @@ setupWizard.setup("./currency.conf").then((configData:CryptoConverter[]) => {
   server.listen(PORT);
 },
 (rejectReason) => {
-  console.log("Error loading config: ", JSON.stringify(rejectReason));
+  logPegMessage("Error loading config: " + JSON.stringify(rejectReason));
 });
 

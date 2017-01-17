@@ -37,7 +37,7 @@ export const writeToFile = (filePath: string, content: string, append: boolean =
   if(append) {
     fs.appendFile(filePath, content, (err) => {
       if (err) {
-        console.log(`ERROR WRITING TO FILE ${JSON.stringify(err)}`);
+        logPegMessage(`ERROR WRITING TO FILE ${JSON.stringify(err)}`);
         deferred.reject(err);
       }
 
@@ -46,7 +46,7 @@ export const writeToFile = (filePath: string, content: string, append: boolean =
   }else{
     fs.writeFile(filePath, content, (err) => {
       if (err) {
-        console.log(`ERROR WRITING TO FILE  ${JSON.stringify(err)}`);
+        logPegMessage(`ERROR WRITING TO FILE  ${JSON.stringify(err)}`);
         deferred.reject(err);
       }
 
@@ -61,7 +61,7 @@ export const readFromFile = (filePath: string): Q.IPromise<string> => {
   let deferred = Q.defer();
   fs.readFile(filePath, "utf-8", (err, data) => {
     if (err) {
-      console.log(`ERROR READING FROM FILE  ${JSON.stringify(err)}`);
+      logPegMessage(`ERROR READING FROM FILE  ${JSON.stringify(err)}`);
       deferred.reject(err);
     }
 

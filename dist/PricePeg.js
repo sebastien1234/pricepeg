@@ -106,11 +106,12 @@ var PricePeg = (function () {
             return deferred.promise;
         };
         this.getRate = function (ratesObject, searchSymbol) {
-            var rate = null;
-            ratesObject.rates.map(function (rateObj) {
+            var rate = 0;
+            for (var i = 0; i < ratesObject.rates.length; i++) {
+                var rateObj = ratesObject.rates[i];
                 if (rateObj.currency == searchSymbol)
                     rate = rateObj.rate;
-            });
+            }
             return rate;
         };
         this.checkPricePeg = function () {
@@ -164,11 +165,10 @@ var PricePeg = (function () {
                                         Utils_1.logPegMessage("Attempting to update price peg because new rate set doesn't match current");
                                     //find the new entries and update them
                                     for (var i = 0; i < newValue.rates.length; i++) {
-                                        if (newValue.rates[i].rate == null) {
+                                        if (newValue.rates[i].rate == null || isNaN(newValue.rates[i].rate)) {
                                             newValue.rates[i].rate = 0;
                                         }
                                     }
-                                    console.log("Update newvale:", JSON.stringify(newValue));
                                     _this.setPricePeg(newValue, currentValue).then(function (result) {
                                         deferred.resolve(result);
                                     });
@@ -248,7 +248,8 @@ var PricePeg = (function () {
             });
             //write updated history object to file
             Utils_1.writeToFile(config_1.default.updateLogFilename, JSON.stringify(_this.updateHistory), false).then(function (result) {
-                console.log("Update log history written to successfully");
+                if (config_1.default.logLevel.logUpdateLoggingEvents)
+                    Utils_1.logPegMessage("Update log history written to successfully");
             });
             _this.sysRates = newValue;
             if (config_1.default.logLevel.logBlockchainEvents) {
@@ -352,7 +353,7 @@ var PricePeg = (function () {
             // }
             //  ]
             //};
-            console.log("New peg:", JSON.stringify(peg));
+            //console.log("New peg:", JSON.stringify(peg));
             return peg;
         };
         if (!config_1.default.enableLivePegUpdates) {

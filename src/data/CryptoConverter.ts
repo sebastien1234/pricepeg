@@ -3,7 +3,7 @@ import BaseConversionDataSource from "./BaseConversionDataSource";
 import * as Q from "q";
 import {CurrencyConfig, PricePegEntry} from "../common";
 import {getFixedRate, getFiatExchangeRate} from "./Utils";
-import {config} from "../config";
+import config from "../config";
 import FixerFiatDataSource from "./FixerFiatDataSource";
 import {conversionKeys} from "../PricePeg";
 

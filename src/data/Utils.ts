@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as Q from "q";
-import {config} from "../config";
+import config from "../config";
 import {HistoryLog, CurrencyData, supportedCurrencies} from "../common";
 
 export const getDeepValue = (obj: any, path:string) => {
@@ -114,6 +114,13 @@ export const getPercentChange = (newRate, oldRate) => {
 
 export const numberWithCommas = (x): string => {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+
+export const copyFields = <T>(target: T, source: Readonly<Partial<T>>): T => {
+  for (let id in source) {
+    target[id] = source[id];
+  }
+  return target;
 };
 
 export const DATA_SOURCE = {

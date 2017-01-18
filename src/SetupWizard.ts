@@ -1,45 +1,66 @@
 import * as Q from "q";
-import {readFromFile, getCurrencyData, DATA_SOURCE, logPegMessage} from "./data/Utils";
-import {CurrencyConfig, CurrencyData, supportedCurrencies} from "./common";
+import {readFromFile, getCurrencyData, DATA_SOURCE, logPegMessage, copyFields} from "./data/Utils";
+import {CurrencyData, supportedCurrencies, PegConfig} from "./common";
 import CurrencyConversion, {CurrencyConversionType} from "./data/CurrencyConversion";
 import CryptoConverter from "./data/CryptoConverter";
 import ConversionDataSource from "./data/ConversionDataSource";
 import BaseConversionDataSource from "./data/BaseConversionDataSource";
 import PoloniexDataSource from "./data/PoloniexDataSource";
+import {defaultConfig} from "./config";
 
 export default class SetupWizard {
   constructor() {
 
   };
 
-  public setup = (configJsonFilePath: string) => {
+  public setup = (configJsonFilePath: string, configOverride: PegConfig = null) => {
     let deferred = Q.defer();
 
-    readFromFile(configJsonFilePath).then((contents) => {
-      let currencyConfig;
-      try {
-        currencyConfig = JSON.parse(contents);
-      }catch(e) {
-        logPegMessage("ERROR: Error parsing JSON from config: " + JSON.stringify(e));
-      }
+    if (!configOverride) {
+      logPegMessage("Reading config from file: " + configJsonFilePath);
+      readFromFile(configJsonFilePath).then((contents) => {
+          let currencyConfig;
+          try {
+            currencyConfig = JSON.parse(contents);
+          } catch (e) {
+            logPegMessage("ERROR: Error parsing JSON from config: " + JSON.stringify(e));
+          }
 
-      if(this.validateCurrencyConfig(currencyConfig)) {
-        logPegMessage("VALID CONFIG.");
-        deferred.resolve(this.generatePegDataSourceObject(currencyConfig));
-      }else{
-        logPegMessage("INVALID CONFIG.");
-        deferred.reject("INVALID CONFIG.")
-      }
-    },
-    (err) => {
-      logPegMessage(`Error reading currency config file! ${JSON.stringify(err)}`);
-      deferred.reject(err);
-    });
+          this.parseConfig(currencyConfig, deferred);
+        },
+        (err) => {
+          logPegMessage(`Error reading currency config file! ${JSON.stringify(err)}`);
+          deferred.reject(err);
+        });
+    } else {
+      logPegMessage("Using config override.");
+      this.parseConfig(configOverride, deferred);
+    }
 
     return deferred.promise;
   };
 
-  validateCurrencyConfig = (configObj: CurrencyConfig[] ): boolean => {
+  private applyDefaultConfig = (config: PegConfig) => {
+    logPegMessage("Applying default config values.");
+    config = copyFields(defaultConfig, config);
+
+    return config;
+  };
+
+  private parseConfig = (config: PegConfig, setupPromise: Q.Deferred<any>) => {
+    logPegMessage("Parsing config.");
+    config = this.applyDefaultConfig(config);
+    if (this.validateCurrencyConfig(config)) {
+      logPegMessage("VALID CONFIG.");
+      setupPromise.resolve(this.generatePegDataSourceObject(config));
+    } else {
+      logPegMessage("INVALID CONFIG.");
+      setupPromise.reject("INVALID CONFIG.")
+    }
+  };
+
+  validateCurrencyConfig = (config: PegConfig): boolean => {
+    let configObj = config.currencies;
     if(configObj && configObj.length) {
       for(let i = 0; i < configObj.length; i++) {
         let configEntry = configObj[i];
@@ -126,10 +147,11 @@ export default class SetupWizard {
     return conversionDataSources;
   };
 
-  generatePegDataSourceObject = (config: CurrencyConfig[]) => {
+  generatePegDataSourceObject = (config: PegConfig) => {
+    let configObj = config.currencies;
     let currencyConversionDataSources: CryptoConverter[] = [];
-    for(let i = 0; i < config.length; i ++) {
-      let configEntry = config[i];
+    for (let i = 0; i < configObj.length; i++) {
+      let configEntry = configObj[i];
 
       //first build conversion object;
       let currencyConversion: CurrencyConversion;

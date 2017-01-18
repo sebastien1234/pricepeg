@@ -1,3 +1,4 @@
+import {PegConfig} from "./common";
 export interface LogLevel {
   logNetworkEvents?: boolean;
   logBlockchainEvents?: boolean;
@@ -12,7 +13,9 @@ const logLevel:LogLevel = {
   logUpdateLoggingEvents: true
 };
 
-export const config = {
+export const defaultConfig: PegConfig = {
+  currencies: [],
+
   maxUpdatesPerPeriod: 6, // maximum number of peg updates that will be allowed to occur in a single period
   updatePeriod: 60 * 60 * 1, //defintion of the duration of a single period in seconds
   updateThresholdPercentage: 0.01, //percentage at which an update is attempted, if value of peg fluctuates +/- this range
@@ -40,4 +43,30 @@ export const config = {
   version: "1.3.0"
 };
 
+let config = {
+  currencies: [],
+  maxUpdatesPerPeriod: null,
+  updatePeriod: null,
+  updateThresholdPercentage: null,
+  updateInterval: null,
+  enableLivePegUpdates: null,
+  enablePegUpdateDebug: null,
+  debugPegUpdateInterval: null,
+  debugPegUpdateIncrement: null,
+  rpcserver: null,
+  rpcuser: null,
+  rpcpassword: null,
+  rpcport: null,
+  rpctimeout: null,
+  pegalias: null,
+  pegalias_aliaspeg: null,
+  httpport: null,
+  logLevel: null,
+  debugLogFilename: null,
+  updateLogFilename: null,
+  version: null
+};
+
 export default config;
+
+

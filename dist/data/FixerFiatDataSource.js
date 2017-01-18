@@ -8,7 +8,7 @@ var BaseConversionDataSource_1 = require("./BaseConversionDataSource");
 var FixerFiatDataSource = (function (_super) {
     __extends(FixerFiatDataSource, _super);
     function FixerFiatDataSource() {
-        var _this = _super.apply(this, arguments) || this;
+        var _this = _super !== null && _super.apply(this, arguments) || this;
         _this.formatCurrencyConversionData = function (rawCurrencyResponseData) {
             //rather than returning an CurrencyConversion object this returns an object that has properties for each of the fiat
             //currencies.

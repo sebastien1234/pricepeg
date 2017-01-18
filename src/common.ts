@@ -1,3 +1,4 @@
+import {LogLevel} from "./config";
 export interface PricePegModel {
   rates: PricePegEntry[];
 }
@@ -15,6 +16,30 @@ export type HistoryLog = HistoryLogEntry[];
 export interface HistoryLogEntry {
   date: number; //result of Date.now()
   value: PricePegModel;
+}
+
+export interface PegConfig {
+  currencies: CurrencyConfig[];
+  maxUpdatesPerPeriod: number; // maximum number of peg updates that will be allowed to occur in a single period
+  updatePeriod: number; //defintion of the duration of a single period in seconds
+  updateThresholdPercentage: number; //percentage at which an update is attempted, if value of peg fluctuates +/- this range
+  updateInterval: number; //time in second to check for price change updates
+  enableLivePegUpdates: boolean; //debug mode, disables live updates to peg on network
+  enablePegUpdateDebug: boolean; //debug mode, enables debug mode which updates peg on set interval w fixed update rather than market rates
+  debugPegUpdateInterval: number; //debug mode, how frequently to update peg
+  debugPegUpdateIncrement: number; //debug mode, how much to increment USD conversion
+  rpcserver: string;
+  rpcuser: string;
+  rpcpassword: string;
+  rpcport: number;
+  rpctimeout: number;
+  pegalias: string;
+  pegalias_aliaspeg: string;
+  httpport: number;
+  logLevel: LogLevel;
+  debugLogFilename: string;
+  updateLogFilename: string;
+  version: string;
 }
 
 export interface CurrencyConfig {

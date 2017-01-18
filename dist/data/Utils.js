@@ -26,7 +26,7 @@ exports.logPegMessage = function (msg, includeTimeStamp) {
     if (includeTimeStamp === void 0) { includeTimeStamp = true; }
     msg = includeTimeStamp ? new Date() + " - " + msg : msg;
     console.log(msg);
-    exports.writeToFile(config_1.config.debugLogFilename, msg + "\n");
+    exports.writeToFile(config_1.default.debugLogFilename, msg + "\n");
 };
 exports.writeToFile = function (filePath, content, append) {
     if (append === void 0) { append = true; }
@@ -96,6 +96,12 @@ exports.getPercentChange = function (newRate, oldRate) {
 };
 exports.numberWithCommas = function (x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+exports.copyFields = function (target, source) {
+    for (var id in source) {
+        target[id] = source[id];
+    }
+    return target;
 };
 exports.DATA_SOURCE = {
     POLONIEX: "poloniex",

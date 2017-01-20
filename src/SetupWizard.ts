@@ -1,7 +1,7 @@
 import * as Q from "q";
 import * as ini from "ini";
 import {readFromFile, getCurrencyData, DATA_SOURCE, logPegMessage, copyFields} from "./data/Utils";
-import {CurrencyData, supportedCurrencies, PegConfig} from "./common";
+import {CurrencyData, supportedCurrencies, PegConfig, CurrencyConfig} from "./common";
 import CurrencyConversion, {CurrencyConversionType} from "./data/CurrencyConversion";
 import CryptoConverter from "./data/CryptoConverter";
 import ConversionDataSource from "./data/ConversionDataSource";
@@ -23,29 +23,26 @@ export default class SetupWizard {
           let currencyConfig;
           try {
             currencyConfig = ini.parse(contents);
-            console.log("CONFIG FROM INI:", JSON.stringify(currencyConfig));
-
             //walk thru the config from ini and change currencies to supported validator format
             let currencyArr = [];
             for (let key in currencyConfig.currencies) {
-              let currencyConfigEntry = currencyConfig.currencies[key];
+              let currencyConfigEntry: CurrencyConfig = currencyConfig.currencies[key];
 
               //convert strings to numbers
               if (currencyConfigEntry.fee)
-                currencyConfigEntry.fee = parseFloat(currencyConfigEntry.fee);
+                currencyConfigEntry.fee = parseFloat(currencyConfigEntry.fee.toString());
 
               if (currencyConfigEntry.escrowFee)
-                currencyConfigEntry.escrowFee = parseFloat(currencyConfigEntry.escrowFee);
+                currencyConfigEntry.escrowFee = parseFloat(currencyConfigEntry.escrowFee.toString());
 
               if (currencyConfigEntry.precision)
-                currencyConfigEntry.precision = parseInt(currencyConfigEntry.precision);
+                currencyConfigEntry.precision = parseInt(currencyConfigEntry.precision.toString());
 
+              currencyConfigEntry.currencySymbol = key;
               currencyArr.push(currencyConfigEntry);
             }
 
             currencyConfig.currencies = currencyArr;
-            console.log("CONFIG FROM INI PARSED:", JSON.stringify(currencyConfig));
-
           } catch (e) {
             logPegMessage("ERROR: Error parsing JSON from config: " + JSON.stringify(e));
           }

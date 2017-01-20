@@ -29,6 +29,8 @@ export default class CryptoConverter {
 
     this.fetchRateData().then(results => {
       deferred.resolve(this.getAveragedExchangeRate());
+    }, (err) => {
+      deferred.reject(err);
     });
 
     return deferred.promise;
@@ -60,7 +62,9 @@ export default class CryptoConverter {
     let currency = this.currencyConversion.fromCurrencySymbol;
 
     //if fiat then use the to currency symbol
-    if( (this.currencyConfig && this.currencyConfig.isFiat) || (this.currencyConfig == null && this.currencyConversion.fromCurrencySymbol == CurrencyConversionType.CRYPTO.BTC.symbol))
+    if ((this.currencyConfig && this.currencyConfig.isFiat) ||
+      (this.currencyConfig == null && this.currencyConversion.fromCurrencySymbol == CurrencyConversionType.CRYPTO.BTC.symbol) ||
+      (this.currencyConfig && this.key == conversionKeys.SYSBTC))
       currency = this.currencyConversion.toCurrencySymbol;
 
     return currency;
@@ -99,6 +103,7 @@ export default class CryptoConverter {
         break;
 
       case CurrencyConversionType.CRYPTO.ZEC.symbol + CurrencyConversionType.CRYPTO.BTC.symbol:
+      case CurrencyConversionType.CRYPTO.FCT.symbol + CurrencyConversionType.CRYPTO.BTC.symbol:
         exchangedRate = getFixedRate(parseFloat(conversionDataSources[conversionKeys.SYSBTC].getAmountToEqualOne(conversionDataSources[this.key].getAveragedExchangeRate()).toString()), precision);
         break;
 

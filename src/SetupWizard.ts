@@ -1,4 +1,5 @@
 import * as Q from "q";
+import * as ini from "ini";
 import {readFromFile, getCurrencyData, DATA_SOURCE, logPegMessage, copyFields} from "./data/Utils";
 import {CurrencyData, supportedCurrencies, PegConfig} from "./common";
 import CurrencyConversion, {CurrencyConversionType} from "./data/CurrencyConversion";
@@ -6,7 +7,7 @@ import CryptoConverter from "./data/CryptoConverter";
 import ConversionDataSource from "./data/ConversionDataSource";
 import BaseConversionDataSource from "./data/BaseConversionDataSource";
 import PoloniexDataSource from "./data/PoloniexDataSource";
-import {defaultConfig} from "./config";
+import {defaultConfig, setConfig, getConfig} from "./config";
 
 export default class SetupWizard {
   constructor() {
@@ -21,7 +22,30 @@ export default class SetupWizard {
       readFromFile(configJsonFilePath).then((contents) => {
           let currencyConfig;
           try {
-            currencyConfig = JSON.parse(contents);
+            currencyConfig = ini.parse(contents);
+            console.log("CONFIG FROM INI:", JSON.stringify(currencyConfig));
+
+            //walk thru the config from ini and change currencies to supported validator format
+            let currencyArr = [];
+            for (let key in currencyConfig.currencies) {
+              let currencyConfigEntry = currencyConfig.currencies[key];
+
+              //convert strings to numbers
+              if (currencyConfigEntry.fee)
+                currencyConfigEntry.fee = parseFloat(currencyConfigEntry.fee);
+
+              if (currencyConfigEntry.escrowFee)
+                currencyConfigEntry.escrowFee = parseFloat(currencyConfigEntry.escrowFee);
+
+              if (currencyConfigEntry.precision)
+                currencyConfigEntry.precision = parseInt(currencyConfigEntry.precision);
+
+              currencyArr.push(currencyConfigEntry);
+            }
+
+            currencyConfig.currencies = currencyArr;
+            console.log("CONFIG FROM INI PARSED:", JSON.stringify(currencyConfig));
+
           } catch (e) {
             logPegMessage("ERROR: Error parsing JSON from config: " + JSON.stringify(e));
           }
@@ -49,12 +73,17 @@ export default class SetupWizard {
 
   private parseConfig = (config: PegConfig, setupPromise: Q.Deferred<any>) => {
     logPegMessage("Parsing config.");
-    config = this.applyDefaultConfig(config);
+
+    //prevent changes to version thru config
+    config.version = defaultConfig.version;
+    setConfig(config);
+    config = getConfig();
+
     if (this.validateCurrencyConfig(config)) {
       logPegMessage("VALID CONFIG.");
       setupPromise.resolve(this.generatePegDataSourceObject(config));
     } else {
-      logPegMessage("INVALID CONFIG.");
+      logPegMessage("INVALID CONFIG." + JSON.stringify(config));
       setupPromise.reject("INVALID CONFIG.")
     }
   };

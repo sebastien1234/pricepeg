@@ -1,4 +1,5 @@
 import {PegConfig} from "./common";
+import {copyFields} from "./data/Utils";
 export interface LogLevel {
   logNetworkEvents?: boolean;
   logBlockchainEvents?: boolean;
@@ -43,30 +44,16 @@ export const defaultConfig: PegConfig = {
   version: "1.3.0"
 };
 
-let config = {
-  currencies: [],
-  maxUpdatesPerPeriod: null,
-  updatePeriod: null,
-  updateThresholdPercentage: null,
-  updateInterval: null,
-  enableLivePegUpdates: null,
-  enablePegUpdateDebug: null,
-  debugPegUpdateInterval: null,
-  debugPegUpdateIncrement: null,
-  rpcserver: null,
-  rpcuser: null,
-  rpcpassword: null,
-  rpcport: null,
-  rpctimeout: null,
-  pegalias: null,
-  pegalias_aliaspeg: null,
-  httpport: null,
-  logLevel: null,
-  debugLogFilename: null,
-  updateLogFilename: null,
-  version: null
+let config = defaultConfig;
+
+//should always use the below functions for accessing config.
+export const getConfig = (): PegConfig => {
+  return config;
 };
 
-export default config;
+export const setConfig = (newConfig: PegConfig) => {
+  copyFields(config, newConfig);
+};
+
 
 

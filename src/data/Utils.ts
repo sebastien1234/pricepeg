@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as Q from "q";
-import config from "../config";
 import {HistoryLog, CurrencyData, supportedCurrencies} from "../common";
+import {getConfig} from "../config";
 
 export const getDeepValue = (obj: any, path:string) => {
   for (let i=0, pathParts=path.split('.'), len=pathParts.length; i<len; i++){
@@ -28,7 +28,7 @@ export const getHumanDate = (time: number): string => {
 export const logPegMessage = (msg, includeTimeStamp: boolean = true) => {
   msg = includeTimeStamp ? new Date() + " - " + msg  : msg;
   console.log(msg);
-  writeToFile(config.debugLogFilename, msg + "\n");
+  writeToFile(getConfig().debugLogFilename, msg + "\n");
 };
 
 export const writeToFile = (filePath: string, content: string, append: boolean = true) => {

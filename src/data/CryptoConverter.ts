@@ -3,9 +3,9 @@ import BaseConversionDataSource from "./BaseConversionDataSource";
 import * as Q from "q";
 import {CurrencyConfig, PricePegEntry} from "../common";
 import {getFixedRate, getFiatExchangeRate} from "./Utils";
-import config from "../config";
 import FixerFiatDataSource from "./FixerFiatDataSource";
 import {conversionKeys} from "../PricePeg";
+import {getConfig} from "../config";
 
 export default class CryptoConverter {
 
@@ -121,8 +121,8 @@ export default class CryptoConverter {
         convertedValue = convertedValue / conversionDataSources[CurrencyConversionType.CRYPTO.SYS.symbol + CurrencyConversionType.CRYPTO.BTC.symbol].getAveragedExchangeRate();
 
         //if debug is enabled artificially increment USD only by config'd amount
-        if (config.enablePegUpdateDebug) {
-          convertedValue += config.debugPegUpdateIncrement;
+        if (getConfig().enablePegUpdateDebug) {
+          convertedValue += getConfig().debugPegUpdateIncrement;
         }
         break;
     }

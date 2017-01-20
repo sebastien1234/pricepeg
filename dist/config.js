@@ -1,4 +1,5 @@
 "use strict";
+var Utils_1 = require("./data/Utils");
 var logLevel = {
     logNetworkEvents: false,
     logBlockchainEvents: true,
@@ -28,28 +29,11 @@ exports.defaultConfig = {
     updateLogFilename: "peg-update-history.log",
     version: "1.3.0"
 };
-var config = {
-    currencies: [],
-    maxUpdatesPerPeriod: null,
-    updatePeriod: null,
-    updateThresholdPercentage: null,
-    updateInterval: null,
-    enableLivePegUpdates: null,
-    enablePegUpdateDebug: null,
-    debugPegUpdateInterval: null,
-    debugPegUpdateIncrement: null,
-    rpcserver: null,
-    rpcuser: null,
-    rpcpassword: null,
-    rpcport: null,
-    rpctimeout: null,
-    pegalias: null,
-    pegalias_aliaspeg: null,
-    httpport: null,
-    logLevel: null,
-    debugLogFilename: null,
-    updateLogFilename: null,
-    version: null
+var config = exports.defaultConfig;
+//should always use the below functions for accessing config.
+exports.getConfig = function () {
+    return config;
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = config;
+exports.setConfig = function (newConfig) {
+    Utils_1.copyFields(config, newConfig);
+};

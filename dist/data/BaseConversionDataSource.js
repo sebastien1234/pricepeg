@@ -1,8 +1,8 @@
 "use strict";
 var Utils_1 = require("./Utils");
-var config_1 = require("../config");
 var rp = require("request-promise");
 var Q = require("q");
+var config_1 = require("../config");
 var BaseConversionDataSource = (function () {
     function BaseConversionDataSource(baseCurrencySymbol, baseCurrencyLabel, dataUrl, responseDataPath) {
         if (responseDataPath === void 0) { responseDataPath = null; }
@@ -15,7 +15,7 @@ var BaseConversionDataSource = (function () {
         this.lastSuccessfulFetchTime = 0;
         this.formatCurrencyConversionData = function (rawCurrencyResponseData) {
             //convert the raw currency conversion data to a standard format, may differ by datasource
-            if (config_1.default.logLevel.logNetworkEvents)
+            if (config_1.getConfig().logLevel.logNetworkEvents)
                 Utils_1.logPegMessage("Handling response in base data source handler.");
             return null; //this should be overridden!
         };
@@ -39,7 +39,7 @@ var BaseConversionDataSource = (function () {
         this.handleFetchCurrencyConversionData = function (response) {
             _this.rawCurrencyConversionData = response;
             _this.lastSuccessfulFetchTime = Date.now();
-            if (config_1.default.logLevel.logNetworkEvents)
+            if (config_1.getConfig().logLevel.logNetworkEvents)
                 Utils_1.logPegMessage(_this.dataUrl + " returned!");
             _this.formatCurrencyConversionData(_this.rawCurrencyConversionData);
         };

@@ -1,8 +1,8 @@
 import CurrencyConversion from "./CurrencyConversion";
 import {logPegMessage} from "./Utils";
-import config from "../config";
 import * as rp from "request-promise";
 import * as Q from "q";
+import {getConfig} from "../config";
 
 export default class BaseConversionDataSource {
 
@@ -20,7 +20,7 @@ export default class BaseConversionDataSource {
 
   formatCurrencyConversionData = (rawCurrencyResponseData: any) => {
     //convert the raw currency conversion data to a standard format, may differ by datasource
-    if(config.logLevel.logNetworkEvents)
+    if (getConfig().logLevel.logNetworkEvents)
       logPegMessage("Handling response in base data source handler.");
 
     return null; //this should be overridden!
@@ -52,7 +52,7 @@ export default class BaseConversionDataSource {
     this.rawCurrencyConversionData = response;
     this.lastSuccessfulFetchTime = Date.now();
 
-    if(config.logLevel.logNetworkEvents)
+    if (getConfig().logLevel.logNetworkEvents)
       logPegMessage(this.dataUrl + " returned!");
 
     this.formatCurrencyConversionData(this.rawCurrencyConversionData);

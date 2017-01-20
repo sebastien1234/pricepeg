@@ -6,7 +6,6 @@ import {
   validateUpdateHistoryLogFormat,
   writeToFile
 } from "./data/Utils";
-import config from "./config";
 import FixerFiatDataSource from "./data/FixerFiatDataSource";
 import {CurrencyConversionType, default as CurrencyConversion} from "./data/CurrencyConversion";
 import CryptoConverter from "./data/CryptoConverter";
@@ -14,8 +13,10 @@ import * as Q from "q";
 import {PricePegModel, HistoryLog, mockPeg} from "./common";
 import ConversionDataSource from "./data/ConversionDataSource";
 import PoloniexDataSource from "./data/PoloniexDataSource";
+import {getConfig} from "./config";
 
 const syscoin = require('syscoin');
+const config = getConfig();
 
 const client = new syscoin.Client({
   host: config.rpcserver,

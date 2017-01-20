@@ -6,8 +6,8 @@
   "scripts": {
     "build": "rm -rf dist && tsc && cp -R ./src/static/ ./dist/static/",
     "test": "mocha ./dist/test",
-    "start-osx": "node dist/server",
-    "start-linux": "nodejs dist/server"
+    "start-osx": "node dist/server $CONFIG",
+    "start-linux": "nodejs dist/server $CONFIG"
   },
   "repository": {
     "type": "git",
@@ -25,6 +25,7 @@
     "express": "^4.13.4",
     "fs": "0.0.2",
     "http": "0.0.0",
+    "ini": "^1.3.4",
     "q": "^1.4.1",
     "request-promise": "^2.0.1",
     "syscoin": "2.2.0"

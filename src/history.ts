@@ -1,9 +1,10 @@
-import config from "./config";
 import PricePeg from "./PricePeg";
 import {CurrencyConversionType} from "./data/CurrencyConversion";
 import {getCurrencyData, numberWithCommas} from "./data/Utils";
+import {getConfig} from "./config";
 
 export const getHistoryPage = (req, res, peg: PricePeg) => {
+  const config = getConfig();
   const updateTime = (config.updateInterval / 60).toFixed(2).indexOf(".00") == -1 ? (config.updateInterval / 60).toFixed(2) : (config.updateInterval / 60);
   const formattedUpdateThreshold = (config.updateThresholdPercentage * 100).toString().indexOf(".") == -1 ? (config.updateThresholdPercentage * 100).toString() : (config.updateThresholdPercentage * 100).toString().substr(0, (config.updateThresholdPercentage * 100).toString().indexOf(".") + 4);
 

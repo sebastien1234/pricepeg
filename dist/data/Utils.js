@@ -2,8 +2,8 @@
 var _this = this;
 var fs = require("fs");
 var Q = require("q");
-var config_1 = require("../config");
 var common_1 = require("../common");
+var config_1 = require("../config");
 exports.getDeepValue = function (obj, path) {
     for (var i = 0, pathParts = path.split('.'), len = pathParts.length; i < len; i++) {
         obj = obj[pathParts[i]];
@@ -26,7 +26,7 @@ exports.logPegMessage = function (msg, includeTimeStamp) {
     if (includeTimeStamp === void 0) { includeTimeStamp = true; }
     msg = includeTimeStamp ? new Date() + " - " + msg : msg;
     console.log(msg);
-    exports.writeToFile(config_1.default.debugLogFilename, msg + "\n");
+    exports.writeToFile(config_1.getConfig().debugLogFilename, msg + "\n");
 };
 exports.writeToFile = function (filePath, content, append) {
     if (append === void 0) { append = true; }

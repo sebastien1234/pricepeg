@@ -1,4 +1,5 @@
 import {LogLevel} from "./config";
+import {CurrencyConversionType} from "./data/CurrencyConversion";
 export interface PricePegModel {
   rates: PricePegEntry[];
 }
@@ -70,56 +71,47 @@ export const mockPeg: PricePegModel = {
 };
 
 export const supportedCurrencies: CurrencyData[] = [
-  {
-    symbol: "USD",
-    label: "US Dollar"
-  },
-  {
-    symbol: "GBP",
-    label: "British Pound",
-  },
-  {
-    symbol: "CNY",
-    label: "Chinese Yuan"
-  },
-  {
-    symbol: "EUR",
-    label: "Euro"
-  },
-  {
-    symbol: "CAD",
-    label: "Canada"
-  },
-  {
-    symbol: "BTC",
-    label: "Bitcoin"
-  },
-  {
-    symbol: "SYS",
-    label: "Syscoin"
-  },
-  {
-    symbol: "ZEC",
-    label: "ZCash"
-  },
-  {
-    symbol: "ETH",
-    label: "Ethereum"
-  },
-  {
-    symbol: "DASH",
-    label: "Dash"
-  },
-  {
-    symbol: "XMR",
-    label: "Monero"
-  },
-  {
-    symbol: "FCT",
-    label: "Factom"
-  },
-  {
-    symbol: "WAVES",
-    label: "Waves"
-  }
+  /* FIAT CURRENCIES */
+  CurrencyConversionType.FIAT.USD,
+  CurrencyConversionType.FIAT.GBP,
+  CurrencyConversionType.FIAT.CNY,
+  CurrencyConversionType.FIAT.EUR,
+  CurrencyConversionType.FIAT.CAD,
+  CurrencyConversionType.FIAT.AUD,
+  CurrencyConversionType.FIAT.BGN,
+  CurrencyConversionType.FIAT.BRL,
+  CurrencyConversionType.FIAT.CHF,
+  CurrencyConversionType.FIAT.CZK,
+  CurrencyConversionType.FIAT.DKK,
+  CurrencyConversionType.FIAT.HKD,
+  CurrencyConversionType.FIAT.HRK,
+  CurrencyConversionType.FIAT.HUF,
+  CurrencyConversionType.FIAT.IDR,
+  CurrencyConversionType.FIAT.ILS,
+  CurrencyConversionType.FIAT.INR,
+  CurrencyConversionType.FIAT.JPY,
+  CurrencyConversionType.FIAT.KRW,
+  CurrencyConversionType.FIAT.MXN,
+  CurrencyConversionType.FIAT.MYR,
+  CurrencyConversionType.FIAT.NOK,
+  CurrencyConversionType.FIAT.NZD,
+  CurrencyConversionType.FIAT.PHP,
+  CurrencyConversionType.FIAT.PLN,
+  CurrencyConversionType.FIAT.RON,
+  CurrencyConversionType.FIAT.RUB,
+  CurrencyConversionType.FIAT.SEK,
+  CurrencyConversionType.FIAT.SGD,
+  CurrencyConversionType.FIAT.THB,
+  CurrencyConversionType.FIAT.TRY,
+  CurrencyConversionType.FIAT.ZAR,
+
+  /* BLOCKCHAIN CURRENCIES */
+  CurrencyConversionType.CRYPTO.BTC,
+  CurrencyConversionType.CRYPTO.SYS,
+  CurrencyConversionType.CRYPTO.ZEC,
+  CurrencyConversionType.CRYPTO.ETH,
+  CurrencyConversionType.CRYPTO.DASH,
+  CurrencyConversionType.CRYPTO.XMR,
+  CurrencyConversionType.CRYPTO.FCT,
+  CurrencyConversionType.CRYPTO.WAVES
 ];

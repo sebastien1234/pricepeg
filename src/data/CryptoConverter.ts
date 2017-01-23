@@ -87,32 +87,31 @@ export default class CryptoConverter {
   };
 
   getCalculatedExchangeRate = (conversionDataSources: CryptoConverter[], fiatDataSource): number => {
-    let exchangedRate = 1;
+    let exchangedRate = -1;
     let precision = this.currencyConfig ? this.currencyConfig.precision : 2;
-    switch(this.key) {
-      case CurrencyConversionType.CRYPTO.BTC.symbol + CurrencyConversionType.FIAT.USD.symbol:
-          exchangedRate = getFixedRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol, conversionDataSources), precision);
-        break;
 
-      case CurrencyConversionType.CRYPTO.BTC.symbol + CurrencyConversionType.FIAT.CAD.symbol:
-        exchangedRate = getFiatExchangeRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol, conversionDataSources), fiatDataSource.formattedCurrencyConversionData.CAD, precision);
-        break;
+    //there will always be a conversion BTC/USD, even if not displayed
+    if (this.key == CurrencyConversionType.CRYPTO.BTC.symbol + CurrencyConversionType.FIAT.USD.symbol) {
+      //return early
+      return getFixedRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol, conversionDataSources), precision);
+    }
 
-      case CurrencyConversionType.CRYPTO.SYS.symbol + CurrencyConversionType.CRYPTO.BTC.symbol:
-        exchangedRate = getFixedRate(1 / conversionDataSources[this.key].getAveragedExchangeRate(), this.currencyConfig.precision);
-        break;
+    //there will always be a conversion SYS/BTC, even if not displayed
+    if (this.key == CurrencyConversionType.CRYPTO.SYS.symbol + CurrencyConversionType.CRYPTO.BTC.symbol) {
+      //return early
+      return getFixedRate(1 / conversionDataSources[this.key].getAveragedExchangeRate(), this.currencyConfig.precision);
+    }
 
-      case CurrencyConversionType.CRYPTO.ZEC.symbol + CurrencyConversionType.CRYPTO.BTC.symbol:
-      case CurrencyConversionType.CRYPTO.FCT.symbol + CurrencyConversionType.CRYPTO.BTC.symbol:
-        exchangedRate = getFixedRate(parseFloat(conversionDataSources[conversionKeys.SYSBTC].getAmountToEqualOne(conversionDataSources[this.key].getAveragedExchangeRate()).toString()), precision);
-        break;
+    if (this.currencyConfig.isFiat) {
+      exchangedRate = getFiatExchangeRate(this.getSYSFiatValue(CurrencyConversionType.FIAT.USD.symbol, conversionDataSources), fiatDataSource.formattedCurrencyConversionData[this.currencyConfig.currencySymbol], precision);
+    } else if (this.key == CurrencyConversionType.CRYPTO.SYS.symbol + CurrencyConversionType.CRYPTO.SYS.symbol) {
+      exchangedRate = 1;
+    } else {
+      exchangedRate = getFixedRate(parseFloat(conversionDataSources[conversionKeys.SYSBTC].getAmountToEqualOne(conversionDataSources[this.key].getAveragedExchangeRate()).toString()), precision);
+    }
 
-      case CurrencyConversionType.CRYPTO.SYS.symbol + CurrencyConversionType.CRYPTO.SYS.symbol:
-        exchangedRate = 1;
-        break;
-
-      default:
-          throw new Error("No currency config defined for getCalculatedExchangeRate or not found- " + this.key);
+    if (exchangedRate == -1) { //exchange rate not found
+      throw new Error("No currency config defined for getCalculatedExchangeRate or not found- " + this.key);
     }
 
     return exchangedRate;

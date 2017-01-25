@@ -304,3 +304,4 @@ var PricePeg = (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = PricePeg;
 ;
+//# sourceMappingURL=PricePeg.js.map

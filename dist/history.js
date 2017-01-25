@@ -51,3 +51,4 @@ exports.formatAMPM = function (date) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = exports.getHistoryPage;
+//# sourceMappingURL=history.js.map

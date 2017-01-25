@@ -21,7 +21,7 @@ catch (e) {
 var express = require('express'), app = express(), server = require('http').createServer(app);
 var config = config_1.getConfig();
 var setupWizard = new SetupWizard_1.default();
-setupWizard.setup("./currency.ini", configOverride).then(function (configData) {
+setupWizard.setup("./config.ini", configOverride).then(function (configData) {
     Utils_1.logPegMessage("TRY TO START PEG.");
     var peg = new PricePeg_1.default(configData);
     peg.start();
@@ -34,3 +34,4 @@ setupWizard.setup("./currency.ini", configOverride).then(function (configData) {
 }, function (rejectReason) {
     Utils_1.logPegMessage("Error loading config: " + JSON.stringify(rejectReason));
 });
+//# sourceMappingURL=server.js.map

@@ -6,8 +6,8 @@
   "scripts": {
     "build": "rm -rf dist && tsc && cp -R ./src/static/ ./dist/static/",
     "test": "mocha ./dist/test",
-    "start-osx": "node dist/server $CONFIG",
-    "start-linux": "nodejs dist/server $CONFIG"
+    "start": "node dist/server $CONFIG",
+    "startd": "pm2 dist/server $CONFIG"
   },
   "repository": {
     "type": "git",

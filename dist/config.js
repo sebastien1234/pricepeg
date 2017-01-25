@@ -37,3 +37,4 @@ exports.getConfig = function () {
 exports.setConfig = function (newConfig) {
     Utils_1.copyFields(config, newConfig);
 };
+//# sourceMappingURL=config.js.map

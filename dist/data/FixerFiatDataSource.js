@@ -52,3 +52,4 @@ var FixerFiatDataSource = (function (_super) {
 }(BaseConversionDataSource_1.default));
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = FixerFiatDataSource;
+//# sourceMappingURL=FixerFiatDataSource.js.map

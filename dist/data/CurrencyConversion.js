@@ -135,3 +135,4 @@ exports.CurrencyConversionType = {
         ZEC: { symbol: "ZEC", label: "ZCASH" }
     }
 };
+//# sourceMappingURL=CurrencyConversion.js.map

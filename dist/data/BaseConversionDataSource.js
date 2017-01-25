@@ -52,3 +52,4 @@ var BaseConversionDataSource = (function () {
 }());
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = BaseConversionDataSource;
+//# sourceMappingURL=BaseConversionDataSource.js.map

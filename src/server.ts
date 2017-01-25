@@ -28,7 +28,7 @@ let express = require('express'),
 let config = getConfig();
 
 let setupWizard = new SetupWizard();
-setupWizard.setup("./currency.ini", configOverride).then((configData: CryptoConverter[]) => {
+setupWizard.setup("./config.ini", configOverride).then((configData: CryptoConverter[]) => {
   logPegMessage("TRY TO START PEG.");
   let peg = new PricePeg(configData);
   peg.start();

@@ -107,3 +107,4 @@ exports.DATA_SOURCE = {
     POLONIEX: "poloniex",
     BITTREX: "bittrex"
 };
+//# sourceMappingURL=Utils.js.map

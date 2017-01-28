@@ -103,8 +103,17 @@ exports.copyFields = function (target, source) {
     }
     return target;
 };
-exports.DATA_SOURCE = {
-    POLONIEX: "poloniex",
-    BITTREX: "bittrex"
+exports.capitalizeFirstLetter = function (string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+};
+exports.capitalizeFirstLetterLowercaseWordPerWord = function (str) {
+    if (str) {
+        var words = str.split(" ");
+        words = words.map(function (word) {
+            return exports.capitalizeFirstLetter(word.toLowerCase());
+        });
+        return words.join(" ");
+    }
+    return null;
 };
 //# sourceMappingURL=Utils.js.map

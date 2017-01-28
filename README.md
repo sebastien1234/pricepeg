@@ -56,7 +56,7 @@ We encourage community contributon! If you wish to contribute please issue a pul
 ## Full Supported Currencies List
 Symbol | Name | isFiat |
 --- | ---| --- | 
-             **USD** | US Dollar | true | 
+**USD** | US Dollar | true | 
 **GBP** | British Pound | true | 
 **CNY** | Chinese Yuan | true | 
 **EUR** | Euro | true | 
@@ -88,85 +88,87 @@ Symbol | Name | isFiat |
 **THB** | Thai Baht | true | 
 **TRY** | Turkish Lira | true | 
 **ZAR** | South African Rand | true | 
-**AMP** | SYNEREO AMP | false | 
-**ARDR** | ARDOR | false | 
-**BBR** | BOOLBERRY | false | 
-**BTC** | BITCOIN | false | 
-**BCN** | BYTECOIN | false | 
-**BCY** | BITCRYSTALS | false | 
-**BELA** | BELLACOIN | false | 
-**BITS** | BITSTAR | false | 
-**BLK** | BLACKCOIN | false | 
-**BTCD** | BITCOINDARK | false | 
-**BTM** | BITMARK | false | 
-**BTS** | BITSHARES | false | 
-**BURST** | BURST | false | 
-**C2** | COIN2.0 | false | 
-**CLAM** | CLAMS | false | 
-**CURE** | CURECOIN | false | 
-**DASH** | DASH | false | 
-**DCR** | DECRED | false | 
-**DGB** | DIGIBYTE | false | 
-**DOGE** | DOGECOIN | false | 
-**EMC2** | EINSTEINIUM | false | 
-**ETC** | ETHEREUM CLASSIC | false | 
-**ETH** | ETHEREUM | false | 
-**EXP** | EXPANSE | false | 
-**FCT** | FACTOM | false | 
-**FLDC** | FOLDINGCOIN | false | 
-**FLO** | FLORINCOIN | false | 
-**GAME** | GAMECREDITS | false | 
-**GRC** | GRIDCOIN RESEARCH | false | 
-**HUC** | HUNTERCOIN | false | 
-**HZ** | HORIZON | false | 
-**IOC** | IO DIGITAL | false | 
-**LBC** | LBRY CREDITS | false | 
-**LSK** | LISK | false | 
-**LTC** | LITECOIN | false | 
-**MAID** | MAIDSAFECOIN | false | 
-**MYR** | MYRIADCOIN | false | 
-**NAUT** | NAUTILUSCOIN | false | 
-**NAV** | NAVCOIN | false | 
-**NEOS** | NEOSCOIN | false | 
-**NMC** | NAMECOIN | false | 
-**NOBL** | NOBLECOIN | false | 
-**NOTE** | DNOTES | false | 
-**NSR** | NUSHARES | false | 
-**NXC** | NEXIUM | false | 
+**AMP** | Synereo Amp | false | 
+**ARDR** | Ardor | false | 
+**BBR** | Boolberry | false | 
+**BTC** | Bitcoin | false | 
+**BCN** | Bytecoin | false | 
+**BCY** | Bitcrystals | false | 
+**BELA** | Bellacoin | false | 
+**BITS** | Bitstar | false | 
+**BLK** | Blackcoin | false | 
+**BTCD** | Bitcoindark | false | 
+**BTM** | Bitmark | false | 
+**BTS** | Bitshares | false | 
+**BURST** | Burst | false | 
+**C2** | Coin2.0 | false | 
+**CLAM** | Clams | false | 
+**CURE** | Curecoin | false | 
+**DASH** | Dash | false | 
+**DCR** | Decred | false | 
+**DGB** | Digibyte | false | 
+**DOGE** | Dogecoin | false | 
+**EMC2** | Einsteinium | false | 
+**ETC** | Ethereum Classic | false | 
+**ETH** | Ethereum | false | 
+**EXP** | Expanse | false | 
+**FCT** | Factom | false | 
+**FLDC** | Foldingcoin | false | 
+**FLO** | Florincoin | false | 
+**GAME** | Gamecredits | false | 
+**GRC** | Gridcoin Research | false | 
+**HUC** | Huntercoin | false | 
+**HZ** | Horizon | false | 
+**IOC** | IO Digital | false | 
+**LBC** | LBRY Credits | false | 
+**LSK** | Lisk | false | 
+**LTC** | Litecoin | false | 
+**MAID** | Maidsafecoin | false | 
+**MYR** | Myriadcoin | false | 
+**NAUT** | Nautiluscoin | false | 
+**NAV** | Navcoin | false | 
+**NEOS** | Neoscoin | false | 
+**NMC** | Namecoin | false | 
+**NOBL** | Noblecoin | false | 
+**NOTE** | DNotes | false | 
+**NSR** | Nushares | false | 
+**NXC** | Nexium | false | 
 **NXT** | NXT | false | 
-**OMNI** | OMNI | false | 
-**PINK** | PINKCOIN | false | 
-**POT** | POTCOIN | false | 
-**PPC** | PEERCOIN | false | 
-**QBK** | QIBUCK | false | 
-**QORA** | QORA | false | 
-**QTL** | QUATLOO | false | 
-**RADS** | RADIUM | false | 
-**RBY** | RUBYCOIN | false | 
-**REP** | AUGUR | false | 
-**RIC** | RIECOIN | false | 
-**SBD** | STEEM DOLLARS | false | 
-**SC** | SIACOIN | false | 
-**SDC** | SHADOW | false | 
-**SJCX** | STORJCOIN X | false | 
-**STEEM** | STEEM | false | 
-**STR** | STELLAR | false | 
-**STRAT** | STRATIS | false | 
-**SYS** | SYSCOIN | false | 
-**UNITY** | SUPERNET | false | 
-**VIA** | VIACOIN | false | 
-**WAVES** | WAVES | false | 
-**VOX** | VOXELS | false | 
-**VTC** | VERTCOIN | false | 
-**XBC** | BITCOINPLUS | false | 
-**XCP** | COUNTERPARTY | false | 
+**OMNI** | Omni | false | 
+**PINK** | Pinkcoin | false | 
+**POT** | Potcoin | false | 
+**PPC** | Peercoin | false | 
+**QBK** | Qibuck | false | 
+**QORA** | Qora | false | 
+**QTL** | Quatloo | false | 
+**RADS** | Radium | false | 
+**RBY** | Rubycoin | false | 
+**REP** | Augur | false | 
+**RIC** | Riecoin | false | 
+**SBD** | Steem Dollars | false | 
+**SC** | Siacoin | false | 
+**SDC** | Shadow | false | 
+**SJCX** | Storjcoin X | false | 
+**STEEM** | Steem | false | 
+**STR** | Stellar | false | 
+**STRAT** | Stratis | false | 
+**SYS** | Syscoin | false | 
+**UNITY** | Supernet | false | 
+**VIA** | Viacoin | false | 
+**WAVES** | Waves | false | 
+**VOX** | Voxels | false | 
+**VTC** | Vertcoin | false | 
+**XBC** | Bitcoinplus | false | 
+**XCP** | Counterparty | false | 
 **XEM** | NEM | false | 
-**XMG** | MAGI | false | 
-**XMR** | MONERO | false | 
-**XPM** | PRIMECOIN | false | 
-**XRP** | RIPPLE | false | 
-**XVC** | VCASH | false | 
-**ZEC** | ZCASH | false | 
+**XMG** | Magi | false | 
+**XMR** | Monero | false | 
+**XPM** | Primecoin | false | 
+**XRP** | Ripple | false | 
+**XVC** | VCash | false | 
+**ZEC** | ZCash | false | 
+
+
 
 
 

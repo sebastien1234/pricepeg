@@ -123,9 +123,23 @@ export const copyFields = <T>(target: T, source: Readonly<Partial<T>>): T => {
   return target;
 };
 
-function capitalizeFirstLetter(string) {
+export const capitalizeFirstLetter = (string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
-}
+};
+
+export const capitalizeFirstLetterLowercaseWordPerWord = (str: string) => {
+  if(str) {
+    let words = str.split(" ");
+    words = words.map(word => {
+      return capitalizeFirstLetter(word.toLowerCase());
+    });
+
+    return words.join(" ");
+  }
+
+  return null;
+};
+
 
 
 

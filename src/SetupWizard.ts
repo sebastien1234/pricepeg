@@ -1,7 +1,7 @@
 import * as Q from "q";
 import * as ini from "ini";
-import {readFromFile, getCurrencyData, DATA_SOURCE, logPegMessage, copyFields} from "./data/Utils";
-import {CurrencyData, supportedCurrencies, PegConfig, CurrencyConfig} from "./common";
+import {readFromFile, getCurrencyData, logPegMessage, copyFields} from "./data/Utils";
+import {CurrencyData, supportedCurrencies, PegConfig, CurrencyConfig, DATA_SOURCE} from "./common";
 import CurrencyConversion, {CurrencyConversionType} from "./data/CurrencyConversion";
 import CryptoConverter from "./data/CryptoConverter";
 import ConversionDataSource from "./data/ConversionDataSource";

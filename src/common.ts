@@ -55,6 +55,7 @@ export interface CurrencyConfig {
 export interface CurrencyData {
   symbol: string;
   label: string;
+  isFiat: boolean;
 }
 
 //holds mock peg data for sync testing
@@ -186,3 +187,8 @@ export const supportedCurrencies: CurrencyData[] = [
   CurrencyConversionType.CRYPTO.XVC,
   CurrencyConversionType.CRYPTO.ZEC
 ];
+
+export const DATA_SOURCE = {
+  POLONIEX: "poloniex",
+  BITTREX: "bittrex"
+};

@@ -123,9 +123,9 @@ export const copyFields = <T>(target: T, source: Readonly<Partial<T>>): T => {
   return target;
 };
 
-export const DATA_SOURCE = {
-  POLONIEX: "poloniex",
-  BITTREX: "bittrex"
-};
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 
 

@@ -6,7 +6,7 @@ The Syscoin Price Peg Server is a NodeJS server application for maintaining a  S
 ## How it Works
 The peg server uses data from multiple sources to derives the necessary values to convert values between various currencies. Fixer.io is used for all fiat currency conversion information, Coinbase is used for all BTC/USD conversion information, and a mix of Poloniex and Bittrex are used for all other blockchain currency information. The server watches each configured currency pair independently and when any one currency exchange rate moves outside the configured threshold the updated values are writted to the peg-alias on the Syscoin blockchain.
 
-## Installation
+## Installation and Setup
 Syscoin Price Peg Server installation requires [NPM and Node](https://nodejs.org/en/download/) 7+. 
 
 1. If installing from source first clone the repository using `git clone https://github.com/syscoin/pricepeg.git`. Alternatively you can also install directly from NPM using `npm install syscoin-price-peg-server`.

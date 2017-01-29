@@ -6,7 +6,7 @@ The Syscoin Price Peg Server is a NodeJS server application for maintaining a  S
 ## How it Works
 The peg server uses data from multiple sources to derives the necessary values to convert values between various currencies. Fixer.io is used for all fiat currency conversion information, Coinbase is used for all BTC/USD conversion information, and a mix of Poloniex and Bittrex are used for all other blockchain currency information. The server watches each configured currency pair independently and when any one currency exchange rate moves outside the configured threshold the updated values are writted to the peg-alias on the Syscoin blockchain.
 
-## Installation
+## Installation and Setup
 Syscoin Price Peg Server installation requires [NPM and Node](https://nodejs.org/en/download/) 7+. 
 
 1. If installing from source first clone the repository using `git clone https://github.com/syscoin/pricepeg.git`. Alternatively you can also install directly from NPM using `npm install syscoin-price-peg-server`.
@@ -56,7 +56,7 @@ We've also included some sample configurations to further illustrate how to cust
 | **rpctimeout** | Syscoin JSONRPC server timeout  | 30000 | *optional* |
 | **httpport** | Port from which the Syscoin Price Peg server will server HTTP content  | 8080 | *optional* |
 | <br> | | | | |
-| **logLevel** | Should define a [LogLevel](#log-level) to control the verbosity of the log output  | logNetworkEvents=false <br> logBlockchainEvents=true <br> logPriceCheckEvents=true <br> logUpdateLoggingEvents=true | required |
+| **logLevel** | Should define a [LogLevel](#log-level) to control the verbosity of the log output  | logNetworkEvents=false <br> logBlockchainEvents=true <br> logPriceCheckEvents=true <br> logUpdateLoggingEvents=true | *optional* |
 | **debugLogFilename** | Name of the file that peg log output will be saved  | peg.log | *optional* |
 | **updateLogFilename** | Name of the file that the peg-update-history will be written to; this differs from `debugLogFilename` in that it only contains the history of the peg-alias data, so that in the case of a server stop/start the history is maintained without needing to re-query the blockchain  | peg-update-history.log | *optional* |
 

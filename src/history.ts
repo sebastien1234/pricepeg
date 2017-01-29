@@ -1,6 +1,6 @@
 import PricePeg from "./PricePeg";
 import {CurrencyConversionType} from "./data/CurrencyConversion";
-import {getCurrencyData, numberWithCommas} from "./data/Utils";
+import {getCurrencyData, numberWithCommas, capitalizeFirstLetterLowercaseWordPerWord} from "./data/Utils";
 import {getConfig} from "./config";
 
 export const getHistoryPage = (req, res, peg: PricePeg) => {
@@ -52,7 +52,7 @@ export const getHistoryPage = (req, res, peg: PricePeg) => {
 
     res.write(`<div style="padding: 10px; display: inline-block; text-align: center; margin: 0 auto">
                 <h3><b>${rate.currency}/SYS:</b> ${formattedValue}</h3>
-                <p style="font-size: 10px; font-style: italic">${formattedValue} Syscoin = 1 ${currencyData.label}</p>
+                <p style="font-size: 10px; font-style: italic">${formattedValue} Syscoin = 1 ${capitalizeFirstLetterLowercaseWordPerWord(currencyData.label)}</p>
               </div>`);
   }
 

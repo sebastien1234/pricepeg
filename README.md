@@ -11,7 +11,7 @@ Syscoin Price Peg Server installation requires [NPM and Node](https://nodejs.org
 
 1. If installing from source first clone the repository using `git clone https://github.com/syscoin/pricepeg.git`. Alternatively you can also install directly from NPM using `npm install syscoin-price-peg-server`.
 2. The server comes with a default config.ini file which controls all aspects of the server, including which currencies it supports. For more information please refer to the [configuration section]().
-3. Update the configuration file to reflect the Alias you with to use as a peg and the currencies you wish to support. **You MUST create the peg alias on the Syscoin network before attempting to use the Price Peg Server to manage it!**
+3. Update the configuration file to reflect the Alias you with to use as a peg and the currencies you wish to support. **You MUST create the peg alias on the Syscoin network with a public value of `{"rates":[]}` BEFORE attempting to run Price Peg Server to manage it!**
 
 ## Supported Currencies
 The full list of supported currencies can be found in [`src/common.ts: supportedCurrencies`](https://github.com/syscoin/pricepeg/blob/dev_1.3/src/common.ts#L74) or in the [table at the bottom of this page](#full-supported-currencies-list).
@@ -27,7 +27,12 @@ The Price Peg Server must be run as a daemon. There are two optons for this:
 * If you use the [screen](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-screen-on-an-ubuntu-cloud-server) application you can start the server by simply running `screen npm run start`. *Make sure to detach from the screen without terminating it!*
 
 ## Server Configuration
-The Syscoin Price Peg Server can easily be reconfigured with zero coding knowledge. Below are the configuration properties and options. The [default configuration file](https://github.com/syscoin/pricepeg/blob/master/config.ini) can also be used as a reference. We've also included some sample configurations to further illustrate how to customize the Syscoin Price Peg Server - [Sample Config #1 DOGE/USD Peg w mods](#sample-config-#1), [Sample Config #2 BTC/XMR/ZEC/ETH Peg w mods](#sample-config-#2).
+The Syscoin Price Peg Server can easily be reconfigured with zero coding knowledge. Below are the configuration properties and options. The [default configuration file](https://github.com/syscoin/pricepeg/blob/master/config.ini) can also be used as a reference. <br>
+<br>
+We've also included some sample configurations to further illustrate how to customize the Syscoin Price Peg Server:
+
+* **[Sample Config #1 DOGE/USD Peg w/ mods](https://github.com/syscoin/pricepeg/tree/dev_1.3#sample-config-1---peg-supporting-doge-and-usd-with-modified-triggers)**
+* **[Sample Config #2 BTC/XMR/ZEC/ETH Peg w/ mods](https://github.com/syscoin/pricepeg/tree/dev_1.3#sample-config-2---peg-supporting-only-xmr-zcash-btc-and-eth-with-modified-triggers-and-logging-customizations)**
 
 | Property Name | Description | Default Value | Required/Optional |
 |---            |---          |---            |---                | 

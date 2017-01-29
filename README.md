@@ -56,7 +56,7 @@ We've also included some sample configurations to further illustrate how to cust
 | **rpctimeout** | Syscoin JSONRPC server timeout  | 30000 | *optional* |
 | **httpport** | Port from which the Syscoin Price Peg server will server HTTP content  | 8080 | *optional* |
 | <br> | | | | |
-| **logLevel** | Should define a [LogLevel](#log-level) to control the verbosity of the log output  | logNetworkEvents=false <br> logBlockchainEvents=true <br> logPriceCheckEvents=true <br> logUpdateLoggingEvents=true | required |
+| **logLevel** | Should define a [LogLevel](#log-level) to control the verbosity of the log output  | logNetworkEvents=false <br> logBlockchainEvents=true <br> logPriceCheckEvents=true <br> logUpdateLoggingEvents=true | *optional* |
 | **debugLogFilename** | Name of the file that peg log output will be saved  | peg.log | *optional* |
 | **updateLogFilename** | Name of the file that the peg-update-history will be written to; this differs from `debugLogFilename` in that it only contains the history of the peg-alias data, so that in the case of a server stop/start the history is maintained without needing to re-query the blockchain  | peg-update-history.log | *optional* |
 
